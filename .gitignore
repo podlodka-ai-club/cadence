@@ -1,0 +1,6 @@
+# Session working material — see CLAUDE.md
+/untracked/*
+!/untracked/.gitkeep
+
+# xmemory CLI credential: holds a plaintext API key, must never be committed
+.xmemrc.json

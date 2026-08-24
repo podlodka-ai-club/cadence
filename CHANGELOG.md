@@ -9,6 +9,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `close-session` skill: reads the session transcript and records the rules the
+  person set, the corrections they made, and what subagents found as `Session`
+  entries in xmemory.
+
 ### Changed
 
 ### Fixed

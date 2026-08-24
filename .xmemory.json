@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "instances": [
+    {
+      "id": "11c80559-b877-4349-a65f-7b1781d922b3",
+      "name": "Claude Code Sessions",
+      "purpose": "rules and mistakes captured from coding sessions, per project",
+      "tier": "autoload",
+      "engage": [
+        "a rule or mistake from an earlier session in this project may apply",
+        "a session is being wrapped up and its rules/mistakes need recording"
+      ]
+    }
+  ]
+}

@@ -4,3 +4,7 @@
 
 # xmemory CLI credential: holds a plaintext API key, must never be committed
 .xmemrc.json
+
+# Python bytecode
+__pycache__/
+*.py[cod]

@@ -32,6 +32,13 @@ decide on their behalf, and do not start work that would bury them.
 With no person to ask — a `one-shot` run — do not start at all. The one-shot process
 defines what happens next; this rule only says the session does not proceed.
 
+## Hardening
+
+Harden the process against failures that actually happened, not ones anticipated in
+advance. The `one-shot` → `close-session` → `retrospective` loop exists so that real
+failures surface as session records and get fixed from there; propose a guard or a check
+only once a record shows the failure occurred, not because it might.
+
 ## Branches
 
 Never commit changes directly to `main`. When work starts and the checkout is on `main`,

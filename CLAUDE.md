@@ -61,3 +61,12 @@ or `fix/transcript-timestamp`. Same type vocabulary as the commits — `feat`, `
 - If a PR introduces a user-observable change — a new protocol feature, a new
   configuration option, a new Prometheus metric, and so on — document it in
   `CHANGELOG.md` under the `[unreleased]` section.
+
+## Changelog
+
+A `CHANGELOG.md` entry names what appeared, in one line — not how it works. Leave out
+field lists, data shapes, output locations, rules about what the code skips, and run
+commands: whoever integrates the change reads the current shape of the project for
+that, and a card of a hundred fields would otherwise drown the file. A later change to
+the same feature gets its own entry when it happens, rather than growing the one that
+introduced it.

@@ -42,6 +42,13 @@ type the work will carry: `<type>/<short-kebab-description>`, e.g. `feat/close-s
 or `fix/transcript-timestamp`. Same type vocabulary as the commits — `feat`, `fix`, `docs`,
 `refactor`, `test`, `chore`, and the rest.
 
+## Review
+
+In a session with a person present, finishing a change and committing it are separate
+steps, and the second one waits for them. Show what the change produced and let them
+confirm it is what they expected before it lands in history — a commit is not a private
+check passing on its own.
+
 ## Commits
 
 - Keep each commit focused on a single task.

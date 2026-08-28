@@ -132,9 +132,19 @@ lists every record that led to it: `date`, `text_type`, and the `message` verbat
 The person merges it; until then the records stay `inprogress`.
 
 **Draft rule** — for a rule about how `filter-card` judges cards. Read the existing
-`Rule` rows in `Filter Rules` first and widen an existing one rather than add a
-near-duplicate. Write the rule as the intent, with the record's example as an
-illustration, status `Draft`:
+`Rule` rows in `Filter Rules` first, in `xresponse` mode so each row's `identifier` is in
+hand, and widen an existing one rather than add a near-duplicate. `Rule` declares no
+primary key, so a widening update can only be keyed by `xuid` — never by `text`, which a
+plain `read` cannot supply and which xmemory rejects with "has no primary key":
+
+```json
+{"object_mutation": {"object_type": "Rule", "update": {
+  "key": {"xuid": "<identifier from the xresponse read>"},
+  "values": {"text": "…", "status": "Draft"}}}}
+```
+
+With nothing to widen, create one instead — `Rule`'s primary key is empty, so a create
+takes a `key` of `{}`:
 
 ```json
 {"object_mutation": {"object_type": "Rule", "create": {

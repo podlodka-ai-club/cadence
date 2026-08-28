@@ -128,7 +128,8 @@ to rely on it.
 type is the Conventional Commits type of the change (`docs` for `CLAUDE.md`, `feat` or
 `fix` for a skill). Make the edit — the rule as an instruction with its reason, in the
 voice of the surrounding text — commit it, push, and open a **draft** PR. The PR body
-lists every record that led to it: `date`, `text_type`, and the `message` verbatim.
+lists every record that led to it: `date`, `text_type`, and the `message` verbatim, and
+states explicitly that the PR was made entirely without human involvement.
 The person merges it; until then the records stay `inprogress`.
 
 **Draft rule** — for a rule about how `filter-card` judges cards. Read the existing

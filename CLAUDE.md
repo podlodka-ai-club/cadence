@@ -53,6 +53,14 @@ out the whole idea — what they want and why — before responding. Do not jump
 proposal or a list of decision questions partway through; that reads as cutting them off.
 Discussion, and any implementation, starts only once they say to move on.
 
+## Trial corrections
+
+A correction the person agrees to while a change is being trialled in the session — a
+tweak to a not-yet-committed skill, a fix suggested while reviewing a result — is not
+applied within that same session, even when there is agreement on it. It goes through the
+normal process instead: close the session, then let the retrospective turn it into its own
+change. The retrospective loop, not the session, is what carries rule changes.
+
 ## Branches
 
 Never commit changes directly to `main`. When work starts and the checkout is on `main`,

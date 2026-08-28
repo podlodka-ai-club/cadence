@@ -14,6 +14,11 @@ actual run, and never a concrete path into the person's working material. Show t
 form a script accepts, e.g. `command [PATH ...] [--out DIR]`, rather than the arguments
 from a real invocation.
 
+**A README documents its own module, not its surroundings.** The task it does, how to run
+it, what comes out — short and plain. No sentences about the stages before or after it in
+the wider pipeline: that framing goes stale as soon as the pipeline around the module
+changes, while the module's own responsibility does not.
+
 ## Working material
 
 `untracked/` is where the person drops material for a session to use — transcripts, logs,

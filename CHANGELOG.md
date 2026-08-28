@@ -14,6 +14,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `close-session` skill: reads the session transcript and records the rules the
   person set, the corrections they made, and what subagents found as `Session`
   entries in xmemory.
+- `filter-card` skill: keeps the cards that are events and writes them to xmemory,
+  consulting stored rules when in doubt.
 
 ### Changed
 

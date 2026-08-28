@@ -10,6 +10,25 @@
         "a rule or mistake from an earlier session in this project may apply",
         "a session is being wrapped up and its rules/mistakes need recording"
       ]
+    },
+    {
+      "id": "aa692887-88fa-4131-87e7-7e4328bef0cb",
+      "name": "City Events & Places",
+      "purpose": "events and places extracted from source post cards",
+      "tier": "available",
+      "engage": [
+        "cards are turned into Event/Place records",
+        "a question is about stored events or places"
+      ]
+    },
+    {
+      "id": "f79c648d-c70c-4627-aff7-f19ea433eb54",
+      "name": "Filter Rules",
+      "purpose": "rules the card filter learns: what is and is not an event",
+      "tier": "available",
+      "engage": [
+        "a card is judged as event or not and the verdict is in doubt"
+      ]
     }
   ]
 }

@@ -9,7 +9,8 @@ Turn a finished session into durable memory. Everything worth carrying into the 
 session gets written to the `Claude Code Sessions` xmemory instance, one record per fact,
 as `unprocessed` — a later pass decides what to do with them.
 
-This skill only reads the session and writes memory. It changes no code.
+This skill only reads the session and writes memory. It changes no code. It runs in the
+top-level agent only — a subagent or another skill never invokes it.
 
 ## Argument — session type
 
@@ -89,8 +90,10 @@ If nothing qualifies, write nothing and say so. An empty close is a normal outco
 | `date` | `started_at` from the script — session **launch** time, ISO 8601, identical on every record from this session |
 | `text_type` | `rule` / `mistake` / `unknown` |
 | `skill_name` | the skill the fact concerns, when it concerns one; otherwise omit |
+| `author` | `Human` when the fact comes from something the person said or did — a rule they stated, a correction they made; `LLM` when it comes from a subagent's finding or your own observation; `Unknown` only when it genuinely cannot be told |
 | `status` | `unprocessed` |
 | `process_date` | omit |
+| `resolution` | omit |
 
 ## 4. Write
 
@@ -113,6 +116,7 @@ several rows on purpose — sorting that out is a separate process, not this ski
         "session_type": "with-human",
         "date": "2026-08-24T08:52:43.262Z",
         "text_type": "rule",
+        "author": "Human",
         "status": "unprocessed"
       }
     }}}
@@ -127,6 +131,6 @@ part, and a blind retry duplicates whatever already went in.
 
 ## 5. Report
 
-One line per record — `text_type` and the message — grouped rule / mistake / unknown, plus
+One line per record — `text_type`, `author` and the message — grouped rule / mistake / unknown, plus
 the session type and the launch date stamped on all of them. Link the write's
 `console_url` once. Then stop: closing a session ends the work, it does not start more.

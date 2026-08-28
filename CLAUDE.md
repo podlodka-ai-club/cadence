@@ -8,6 +8,12 @@ regardless of the language the session was conducted in.
 
 Conversation with a person is exempt: talk to them in whatever language they use.
 
+**Examples are invented, not real.** A command, a path, or a sample record shown in
+documentation is made up for the occasion — never a card or transcript copied out of an
+actual run, and never a concrete path into the person's working material. Show the usage
+form a script accepts, e.g. `command [PATH ...] [--out DIR]`, rather than the arguments
+from a real invocation.
+
 ## Working material
 
 `untracked/` is where the person drops material for a session to use — transcripts, logs,

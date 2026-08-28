@@ -43,10 +43,11 @@ Read the rules from `Filter Rules` — once per run, on the first doubt, and kee
 the rest of it:
 
 ```
-read(query="List every Rule (text).", read_mode="raw-tables")
+read(query="List every Rule with status Active (text).", read_mode="raw-tables")
 ```
 
-Each `Rule` is a plain-text instruction to you. Apply them to the card; a rule wins over
+Only `Active` rules count; a `Draft` rule is one the person has not confirmed yet and is
+not applied. Each `Rule` is a plain-text instruction to you. Apply them to the card; a rule wins over
 your own reading. If they settle it, the verdict is sure, and the report says which rule
 decided. If they do not, `reject`, and say in the reason that the doubt stayed.
 

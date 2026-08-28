@@ -16,7 +16,12 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   entries in xmemory.
 - `filter-card` skill: keeps the cards that are events and writes them to xmemory,
   consulting stored rules when in doubt.
+- `retrospective` skill: turns unprocessed session records into one change — a pull
+  request, a draft filter rule, or an issue — and closes the rest with a reason.
 
 ### Changed
+
+- `close-session` skill: records who a fact came from (`author`).
+- `filter-card` skill: applies only `Active` filter rules; drafts are ignored.
 
 ### Fixed

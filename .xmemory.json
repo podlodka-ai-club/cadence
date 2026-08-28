@@ -8,7 +8,8 @@
       "tier": "autoload",
       "engage": [
         "a rule or mistake from an earlier session in this project may apply",
-        "a session is being wrapped up and its rules/mistakes need recording"
+        "a session is being wrapped up and its rules/mistakes need recording",
+        "unprocessed session records are being worked through by the retrospective"
       ]
     },
     {

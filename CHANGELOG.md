@@ -21,6 +21,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `manager` skill: carries out one task with no person in the loop — prepares an
   isolated worktree, hands the work to the skill that owns it, and closes the
   session.
+- `scripts/`: unattended launchers that run the manager on the retrospective's two
+  tasks, one run of a job at a time, logging each run.
 
 ### Changed
 

@@ -18,6 +18,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   consulting stored rules when in doubt.
 - `retrospective` skill: turns unprocessed session records into one change — a pull
   request, a draft filter rule, or an issue — and closes the rest with a reason.
+- `manager` skill: carries out one task with no person in the loop — prepares an
+  isolated worktree, hands the work to the skill that owns it, and closes the
+  session.
 
 ### Changed
 

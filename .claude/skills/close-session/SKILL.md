@@ -10,7 +10,8 @@ session gets written to the `Claude Code Sessions` xmemory instance, one record 
 as `unprocessed` — a later pass decides what to do with them.
 
 This skill only reads the session and writes memory. It changes no code. It runs in the
-top-level agent only — a subagent or another skill never invokes it.
+top-level agent only, never in a subagent. The `manager` skill runs it as the last step of
+a one-shot run; no other skill invokes it.
 
 ## Argument — session type
 

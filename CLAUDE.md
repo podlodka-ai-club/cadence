@@ -46,6 +46,13 @@ decide on their behalf, and do not start work that would bury them.
 With no person to ask — a `one-shot` run — do not start at all. The one-shot process
 defines what happens next; this rule only says the session does not proceed.
 
+## Design discussions
+
+When the person opens a new feature or change by wanting to discuss it first, let them lay
+out the whole idea — what they want and why — before responding. Do not jump to a design
+proposal or a list of decision questions partway through; that reads as cutting them off.
+Discussion, and any implementation, starts only once they say to move on.
+
 ## Branches
 
 Never commit changes directly to `main`. When work starts and the checkout is on `main`,

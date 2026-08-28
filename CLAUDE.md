@@ -23,6 +23,10 @@ and put your own scratch output there rather than in the tree. Never commit anyt
 it, and never make the project depend on a file there: a fresh clone gets an empty
 directory.
 
+When material a task needs is not in `untracked/`, ask the person for it rather than
+going looking — never search the person's other local projects or directories for it.
+Material this session was not handed is not this session's to use.
+
 ## Session start
 
 Check the working tree before doing anything else. If there are uncommitted changes, stop

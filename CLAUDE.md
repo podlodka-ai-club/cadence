@@ -44,6 +44,9 @@ or `fix/transcript-timestamp`. Same type vocabulary as the commits — `feat`, `
   `<type>[optional scope][!]: <description>`, e.g. `feat(close-session): record subagent
   findings`. A breaking change is marked with `!` before the colon, or a
   `BREAKING CHANGE:` footer.
+- A change that exists only to support another — a `CHANGELOG.md` entry, a new
+  `.gitignore` rule, a placeholder file — rides in the commit of the change it supports,
+  not as a commit of its own.
 
 ## Pull requests
 

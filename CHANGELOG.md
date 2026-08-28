@@ -23,5 +23,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `close-session` skill: records who a fact came from (`author`).
 - `filter-card` skill: applies only `Active` filter rules; drafts are ignored.
+- `retrospective` skill: takes the task to run as its argument — `process` for new
+  records, `sync` to resolve the ones an earlier run left open.
 
 ### Fixed

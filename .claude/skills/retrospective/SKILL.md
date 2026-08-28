@@ -1,13 +1,37 @@
 ---
 name: retrospective
-description: Work through the unprocessed Session records in the `Claude Code Sessions` xmemory instance and turn what they say into one atomic change — a pull request against CLAUDE.md or a skill, a draft rule in `Filter Rules`, or a GitHub issue — then stop. Records that need no change are closed with a one-line reason. Use when asked to run the retrospective, process session records, or when the user runs /retrospective. Takes an optional xmemory session id.
+description: Run one task over the Session records in the `Claude Code Sessions` xmemory instance, named explicitly at the start. `process` turns unprocessed records into one atomic change — a pull request against CLAUDE.md or a skill, a draft rule in `Filter Rules`, or a GitHub issue — and closes the records that need none. `sync` resolves the records an earlier run left `inprogress`, once the person has merged or closed the pull request or ruled on the draft rule. Use when asked to run the retrospective, process session records, or close out what an earlier run left open, or when the user runs /retrospective.
 ---
 
 # retrospective
 
 Session records are what `close-session` leaves behind: rules the person set, mistakes
-that were corrected, things nobody classified. This skill reads the ones still marked
-`unprocessed` for the `cadence` project and acts on them, one change per run.
+that were corrected, things nobody classified. This skill works on the records of the
+`cadence` project, and does one of two tasks per run — the one named in its argument.
+
+## Arguments
+
+- **task** — required, one of:
+
+| Value | What the run does |
+|---|---|
+| `process` | works through the `unprocessed` records and makes at most one change |
+| `sync` | resolves the records an earlier `process` run left `inprogress` |
+
+  A run does one of them and never both: a `process` run does not also close out what an
+  earlier run left open, and a `sync` run makes no change of its own. If the argument is
+  missing, ask which task it is; with nobody to ask, do nothing and say so — never pick a
+  task on your own.
+
+  The two tasks do not depend on each other. A change that the person turned down closes
+  its records for good rather than returning them to the backlog, so `process` never needs
+  a `sync` to have run first.
+
+- **session id** — optional: an xmemory session id, `claude-<10 lowercase letters>`.
+  When given, use it; when not, generate one. Pass it as `session_id` on every xmemory
+  call.
+
+# Task `process`
 
 The unit of work is **one change of the rules**. A rule change shifts how every later
 session behaves and there is no evaluation yet that can compare old rules with new, so
@@ -15,12 +39,6 @@ a run never bundles unrelated changes: it works through the records in priority 
 closes the ones that need nothing, and stops at the first one that needs a change once
 that change is made. If it reaches the end without making a change, that is a complete
 run too.
-
-## Argument
-
-- **session id** — optional: an xmemory session id, `claude-<10 lowercase letters>`.
-  When given, use it; when not, generate one. Pass it as `session_id` on every xmemory
-  call.
 
 ## 1. Read the backlog
 
@@ -126,8 +144,11 @@ Every record touched gets one `update` in a single `write_async`, keyed by xuid:
 | no change needed | `processed` | why — one plain sentence, two at most: *"Already stated in CLAUDE.md under Commits."*, *"Single LLM observation, 12 days old, nothing similar since."* |
 | issue opened | `processed` | *"Issue opened: <url>"* |
 | PR opened | `inprogress` | *"PR opened: <url>"* |
-| draft rule written | `inprogress` | *"Draft rule written to Filter Rules: <first words of the rule>"* |
+| draft rule written | `inprogress` | *"Draft rule written to Filter Rules: <the rule's text, in full>"* |
 | could not be finished this run | `unprocessed` — untouched | — |
+
+The rule's text goes into the resolution whole, not shortened: it is the `Rule` primary
+key, and a later `sync` has nothing else to match the record against.
 
 `process_date` is set whenever the status changes. A record the run looked at but did
 not resolve is left exactly as it was.
@@ -155,3 +176,75 @@ left: <n> still unprocessed
 
 `nothing-to-do` means the backlog was empty at the start. Link the `console_url` of the
 write once. Then stop.
+
+# Task `sync`
+
+A `process` run that opens a pull request or writes a draft rule leaves its records
+`inprogress`: the change is out, but the person has not ruled on it yet. `sync` finds out
+what they decided and finishes those records. It changes no rule, no file and no code of
+its own — the ten-record limit does not apply, and every open record is looked at.
+
+## 1. Read the open records
+
+```
+read(query="Every Session with project_name cadence and status inprogress, all fields.",
+     read_mode="xresponse")
+```
+
+Nothing there — report `nothing-to-do` and stop.
+
+## 2. Find out what the person decided
+
+The `resolution` says which channel the record went out through.
+
+**`PR opened: <url>`** — group the records by url; one call per url, not per record:
+
+```bash
+gh pr view <url> --json state,mergedAt,closedAt,comments
+```
+
+**`Draft rule written to Filter Rules: <text>`** — one read of `Filter Rules` for all of
+them, matched on the rule text carried in the resolution:
+
+```
+read(query="Every Rule with its text and status.", read_mode="raw-tables")
+```
+
+## 3. Resolve
+
+Every record that went out on the same change gets the same outcome — the person ruled on
+the change, not on the records.
+
+| What happened | `status` | `resolution` | `process_date` |
+|---|---|---|---|
+| PR merged | `processed` | *"PR merged: <url>"* | `mergedAt` |
+| PR closed without merging | `processed` | *"PR closed without merging: <url>"*, plus why if the closing comment says — one sentence, two at most in total | `closedAt` |
+| draft rule now `Active` | `processed` | *"Draft rule activated: <the rule's text>"* | now |
+| draft rule gone from `Filter Rules` | `processed` | *"Draft rule dropped from Filter Rules: <the rule's text>"* | now |
+| PR still open, rule still `Draft` | `inprogress` — untouched | — | — |
+| the change cannot be found — `gh` fails, the url does not resolve | `inprogress` — untouched | — | — |
+
+A change the person turned down is settled, not undone: its records close as `processed`
+and do not return to the backlog. Re-proposing what was already refused would cost a whole
+`process` run and land the same answer. If the lesson still deserves a different change,
+the person says so and the record goes back to `unprocessed` by hand.
+
+Everything the run resolves goes out as `update` mutations in a single `write_async`,
+keyed by xuid, exactly as in `process`.
+
+## 4. Result
+
+```
+result: <resolved | nothing-to-do>
+merged: <n records over n changes>
+  - <url> — <n records> — <resolution>
+declined: <n records over n changes>
+  - <url> — <n records> — <resolution>
+open: <n records still inprogress>
+  - <url or rule> — <n records>
+unreachable: <n records still inprogress>
+  - <url> — what failed
+```
+
+`nothing-to-do` means nothing was `inprogress` at the start. Link the `console_url` of
+the write once. Then stop.

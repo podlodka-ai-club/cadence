@@ -93,6 +93,15 @@ or — for a rule about how `filter-card` judges cards — a `Rule` in `Filter R
 Check the relevant place before deciding; a record that restates what is already written
 is closed, not acted on.
 
+The same check covers work already out for review: before treating a record as needing a
+change, check the open pull requests (`gh pr list --state open`) for one that already
+makes it. A record whose change is already an open, unmerged pull request is not acted on
+again — it is not left `unprocessed` either, since nothing will ever pick it up a second
+time and call it done. Treat it as if this run had opened that pull request: `inprogress`,
+with resolution `"PR opened: <url>"` pointing at the existing PR. Linking a record to a
+pull request already out for review is bookkeeping, not this run's one change, so weighing
+continues afterward and a later record can still be the one the run acts on.
+
 Similar records are handled together: one change, every record it rests on.
 
 ## 4. Act

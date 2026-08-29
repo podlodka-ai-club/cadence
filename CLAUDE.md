@@ -19,6 +19,11 @@ it, what comes out — short and plain. No sentences about the stages before or 
 the wider pipeline: that framing goes stale as soon as the pipeline around the module
 changes, while the module's own responsibility does not.
 
+**A skill describes its own work only.** Its `SKILL.md` covers what the skill itself
+does — not how or where it is launched, what else is running alongside it, or what the
+surrounding process must or must not do. Rules of that kind belong to the process doing
+the launching (a skill, a script, a person), not to the skill being launched.
+
 ## Working material
 
 `untracked/` is where the person drops material for a session to use — transcripts, logs,

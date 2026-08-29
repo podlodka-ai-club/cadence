@@ -111,7 +111,11 @@ with resolution `"PR opened: <url>"` pointing at the existing PR. Linking a reco
 pull request already out for review is bookkeeping, not this run's one change, so weighing
 continues afterward and a later record can still be the one the run acts on.
 
-Similar records are handled together: one change, every record it rests on.
+Similar records are handled together: one change, every record it rests on. Similar
+means the records call for the same change — the same rule, the same fix — not that
+they share a topic or a word: two records that both happen to mention `.gitignore` for
+otherwise unrelated reasons are not similar, and grouping them by the word rather than
+the rule sends one change after records that each needed their own.
 
 ## 4. Act
 

@@ -124,6 +124,14 @@ A unit failed when the agent terminated early, the report says the task did not 
 or nothing readable came back at all. Everything else succeeded, on the skill's own terms:
 `no-change` and `nothing-to-do` are results, not failures.
 
+Record each agent's outcome the moment it reports, not after the batch or at the end of
+the run. Append one line — `<argument> — <ok|failed> — <one line of what came back>` — to
+`$MAIN/untracked/manager-report-<RUN_ID>.txt` as soon as the agent returns, before judging
+the next one or launching another batch. Holding results only in context until step 8
+means a run interrupted mid-batch loses every judgement already made; the file is scratch
+output of the run itself, so it belongs in `untracked/` in the main checkout, never in the
+worktree.
+
 **A failure ends the run.** No relaunch — the same prompt lands the same way, and a second
 attempt on a half-done change is how a one-shot run corrupts something. Launch no further
 batches, wait for the agents already running to come back, and go to the close. The units

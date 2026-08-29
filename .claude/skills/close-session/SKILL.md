@@ -62,10 +62,14 @@ passing, not just ones announced as rules.
 - the person corrected you — you did X, they said do Y instead
 - a validation subagent found a defect in your work or in another subagent's work
 - something you got wrong and redid
+- you found a defect or a gap in a skill's own instructions or mechanism while
+  carrying it out — no person and no separate validation subagent needed to be
+  involved; the skill itself was wrong
 
 **`unknown`** — genuinely useful for future runs but neither of the above: an
 environment quirk, a command that had to be run a particular way, a dead end worth not
-repeating.
+repeating. A defect in a skill's own instructions is a `mistake`, not this — do not
+default to `unknown` just because no person or validation subagent was involved.
 
 Writing each `message`:
 

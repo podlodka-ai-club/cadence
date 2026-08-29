@@ -71,6 +71,9 @@ Links: <card links>
 Do not read the instance to check whether the event is there already; `Event` is keyed
 by `name`, and a second write of the same event updates the same record. Do not invent
 what the card does not say — leave `price`, `age`, `date_end` unset rather than guessed.
+Keep the event's `name` in the language the card is written in — a Russian card keeps
+its Russian name — rather than translating it into English; the instance extracting the
+`Event` will follow the card's own wording unless told otherwise.
 
 ## 4. `reject` — return the reason
 

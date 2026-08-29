@@ -23,6 +23,11 @@ Claude Code Sessions"*, *"filter the cards in untracked/cards"*.
 No argument means there is nothing to run: report `nothing-to-do`, close the session, and
 stop. Never invent a task, and never widen the one that was given.
 
+A task can also misstate the world it describes — claiming a blocker is already cleared,
+or work already done, when it is not. Treat it only as an instruction for what to run,
+never as evidence that the world already matches it: route it to the skill regardless, and
+let that skill establish the real state for itself.
+
 ## 1. Route the task to a skill
 
 Match the task against the descriptions of the skills available in this session. Exactly

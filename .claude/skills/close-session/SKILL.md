@@ -79,7 +79,13 @@ Leave out: the task content itself, chatter, and anything already recorded in th
 already say. If the person never stated it, it is not a rule; do not infer one from a
 single instance of doing something.
 
-If nothing qualifies, write nothing and say so. An empty close is a normal outcome.
+If nothing qualifies, write nothing and say so. An empty close is a normal outcome — most
+runs should close empty. Do not write a record to avoid an empty close; a record earns its
+place by teaching a lesson a later session would otherwise repeat, not by being the first
+thing that comes to mind. Hold this bar especially high for facts about running
+close-session or the runs that call it: an environment quirk hit once tends to recur as
+the same near-identical record run after run, and a backlog fed by its own retrospective
+process is a backlog nobody asked for.
 
 ## 3. Fields
 

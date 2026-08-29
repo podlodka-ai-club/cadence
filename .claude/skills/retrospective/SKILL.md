@@ -252,7 +252,7 @@ keyed by xuid, exactly as in `process`.
 ## 4. Result
 
 ```
-result: <resolved | nothing-to-do>
+result: <resolved | unresolved | nothing-to-do>
 merged: <n records over n changes>
   - <url> — <n records> — <resolution>
 declined: <n records over n changes>
@@ -263,5 +263,8 @@ unreachable: <n records still inprogress>
   - <url> — what failed
 ```
 
-`nothing-to-do` means nothing was `inprogress` at the start. Link the `console_url` of
+`nothing-to-do` means nothing was `inprogress` at the start. `unresolved` means the
+backlog was not empty but nothing on it merged, closed, or activated this run — every
+record inspected stays `inprogress`, listed under `open` or `unreachable`. `resolved`
+is for a run where at least one record moved to `processed`. Link the `console_url` of
 the write once. Then stop.

@@ -32,6 +32,14 @@ decide on their behalf, and do not start work that would bury them.
 With no person to ask — a `one-shot` run — do not start at all. The one-shot process
 defines what happens next; this rule only says the session does not proceed.
 
+## xmemory
+
+The state an xmemory instance preloads into a session at start shows every record it
+holds, regardless of status — it is a convenience snapshot, not a filtered view. Size a
+backlog, or judge how many records match some condition, with an explicit
+status-filtered `read`; a count read off the preload can be badly wrong, since it still
+carries records a filtered read would have excluded.
+
 ## Branches
 
 Never commit changes directly to `main`. When work starts and the checkout is on `main`,

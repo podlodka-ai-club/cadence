@@ -28,8 +28,13 @@ run), use `one-shot` and say so in the report — never guess between the other 
 
 ## 1. Gather the material
 
+`$CLAUDE_PROJECT_DIR` is not reliably set in the Bash tool's environment — expect it
+empty and the command below to fail with a path rooted at `/`. Run the script by a path
+relative to the repository root instead, which is where a session's shell already
+starts:
+
 ```bash
-python3 "$CLAUDE_PROJECT_DIR/.claude/skills/close-session/scripts/session_material.py"
+python3 .claude/skills/close-session/scripts/session_material.py
 ```
 
 It prints JSON: `started_at`, `project_name`, `human_messages`, and `agent_activity`

@@ -168,14 +168,16 @@ Print, in this order:
 result: <change | no-change | nothing-to-do>
 change: <PR url | issue url | "draft rule in Filter Rules"> — one line on what it says
 processed: <n>
-  - <date> <text_type> — <resolution>
+  - <xuid> <date> <text_type> — <resolution>
 inprogress: <n>
-  - <date> <text_type> — <resolution>
+  - <xuid> <date> <text_type> — <resolution>
 left: <n> still unprocessed
 ```
 
-`nothing-to-do` means the backlog was empty at the start. Link the `console_url` of the
-write once. Then stop.
+`nothing-to-do` means the backlog was empty at the start. The `xuid` is there because
+`close-session` stamps every record of one session with the same `date`, so a report
+that named records by `date` alone could not tell two of them apart; the `xuid` always
+can. Link the `console_url` of the write once. Then stop.
 
 # Task `sync`
 

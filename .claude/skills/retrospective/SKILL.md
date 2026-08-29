@@ -83,6 +83,10 @@ them is a pattern worth solving. A single record is acted on only when it is cle
 important to the process. A single record older than seven days, with no similar record
 in those seven days and no clear importance, is closed.
 
+A record reporting that a `process` run itself ended in `no-change` is clearly important
+on its own, without waiting for a pattern to accumulate: this skill's job is to drain the
+backlog, so a run of it that cannot is a defect in the process, not noise to wait out.
+
 **`unknown` text type** — first try to reclassify it as a rule or a mistake from its
 text and treat it as that. If it does not reclassify, judge what it is and who wrote it
 as above; if that is not clear either and nothing similar exists, close it as not

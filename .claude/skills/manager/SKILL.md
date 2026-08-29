@@ -59,12 +59,25 @@ RUN_ID="$(date -u +%Y-%m-%d-%H%M%S)"
 WORKTREE="$(dirname "$MAIN")/$(basename "$MAIN")-worktrees/$RUN_ID"
 
 git -C "$MAIN" fetch origin
+if [ "$(git -C "$MAIN" branch --show-current)" = "main" ] && \
+   [ -z "$(git -C "$MAIN" status --porcelain)" ]; then
+    git -C "$MAIN" merge --ff-only origin/main
+fi
 git -C "$MAIN" worktree add --detach "$WORKTREE" origin/main
 ```
 
 Detached on purpose. A branch can be checked out in one worktree only, so a run sitting on
 `main` would block the next one from starting. The skill creates its own branch when it
 needs one — the manager creates none and commits nothing.
+
+The fast-forward matters because the worktree is not the only place a subagent reads
+this repository from: its Skill tool loads a skill's content from the main checkout, not
+from the worktree it works in. A main checkout that has drifted behind `origin/main` —
+nothing before this step ever moved it forward — makes the subagent follow an older
+skill than the tree it commits into. The fast-forward only runs when it is safe (`main`
+checked out, nothing uncommitted); when the checkout is on another branch or dirty, it is
+left alone, same as before — the worktree still comes from `origin/main`, and any
+staleness there is a pre-existing condition this step did not create.
 
 The main checkout is not touched. Whatever is uncommitted there stays uncommitted and
 belongs to whoever left it; report the state of the tree, never act on it.

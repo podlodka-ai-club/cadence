@@ -43,10 +43,17 @@ Read the chosen skill's `SKILL.md` and let its argument decide:
 | The skill's argument is | The run launches |
 |---|---|
 | a mode, or the task as a whole — `retrospective` takes `process` or `sync` | one subagent |
-| one unit of work — `filter-card` takes one card | one subagent per unit |
+| one unit of work, one at a time | one subagent per unit |
+| one unit of work, several accepted per invocation — `filter-card` takes one card path or several | one subagent per batch of units |
 
 Enumerate the units before launching anything: list the files, read the set. An empty set
 is `nothing-to-do` — say so rather than launching an agent to discover it.
+
+A skill whose argument accepts several units per invocation does not need one subagent
+per unit: split the units into batches — by a grouping they already carry, such as the
+day a card was posted — and hand each subagent a batch instead of a single unit.
+Batching is what lets a run of hundreds of units stay within the subagent cap below;
+one subagent per unit does not.
 
 ## 3. Prepare the workspace
 
@@ -152,7 +159,9 @@ whose lesson is worth keeping, and an empty close is a normal outcome.
 ## Limits
 
 - One task per run, and the task as it was given.
-- At most **twenty** units per run, five agents at a time. The rest are reported as left.
+- At most **twenty** subagents per run, five at a time. The rest are reported as left.
+  When units are batched, the cap is on subagents launched, not on units carried — a
+  subagent can carry several units of its batch.
 - No relaunches, no repairs, no work the manager does itself.
 
 ## 8. Result

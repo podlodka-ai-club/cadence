@@ -160,7 +160,7 @@ Every record touched gets one `update` in a single `write_async`, keyed by xuid:
 ```json
 {"object_mutation": {"object_type": "Session", "update": {
   "key": {"xuid": "<identifier from the read>"},
-  "values": {"status": "processed", "process_date": "<now, ISO 8601>",
+  "values": {"status": "processed", "process_date": "<current UTC timestamp>",
              "resolution": "<one sentence>"}}}}
 ```
 
@@ -175,8 +175,9 @@ Every record touched gets one `update` in a single `write_async`, keyed by xuid:
 The rule's text goes into the resolution whole, not shortened: it is the `Rule` primary
 key, and a later `sync` has nothing else to match the record against.
 
-`process_date` is set whenever the status changes. A record the run looked at but did
-not resolve is left exactly as it was.
+`process_date` is set whenever the status changes, to the real current time — run
+`date -u +%FT%TZ` and use its output, rather than approximating one. A record the run
+looked at but did not resolve is left exactly as it was.
 
 ## Limits
 
@@ -246,10 +247,13 @@ the change, not on the records.
 |---|---|---|---|
 | PR merged | `processed` | *"PR merged: <url>"* | `mergedAt` |
 | PR closed without merging | `processed` | *"PR closed without merging: <url>"*, plus why if the closing comment says — one sentence, two at most in total | `closedAt` |
-| draft rule now `Active` | `processed` | *"Draft rule activated: <the rule's text>"* | now |
-| draft rule gone from `Filter Rules` | `processed` | *"Draft rule dropped from Filter Rules: <the rule's text>"* | now |
+| draft rule now `Active` | `processed` | *"Draft rule activated: <the rule's text>"* | current UTC timestamp |
+| draft rule gone from `Filter Rules` | `processed` | *"Draft rule dropped from Filter Rules: <the rule's text>"* | current UTC timestamp |
 | PR still open, rule still `Draft` | `inprogress` — untouched | — | — |
 | the change cannot be found — `gh` fails, the url does not resolve | `inprogress` — untouched | — | — |
+
+"Current UTC timestamp" means the real current time — run `date -u +%FT%TZ` and use its
+output, rather than approximating one.
 
 A change the person turned down is settled, not undone: its records close as `processed`
 and do not return to the backlog. Re-proposing what was already refused would cost a whole

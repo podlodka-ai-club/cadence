@@ -15,6 +15,11 @@ the task, writes nothing to xmemory on the task's behalf, and never finishes by 
 a subagent failed to do — a run that reports a failure is more useful than a run that
 papers over one.
 
+A one-shot session can start with a `SessionStart` notice that xmemory context could not
+be loaded, meaning only that bound instances were not preloaded — the xmemory MCP tools
+still read and write normally once called. Do not treat the notice as xmemory being
+unavailable; call `read` and `write_async` as the task and `close-session` need.
+
 ## Argument — the task
 
 Required, in plain words: what this run is for. *"Process the unprocessed records from

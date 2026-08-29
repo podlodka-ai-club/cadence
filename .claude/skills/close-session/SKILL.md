@@ -69,6 +69,9 @@ Writing each `message`:
 - State it as an instruction or a finding, not as narration. *"Bind xmemory at project
   scope so `.xmemory.json` is committed"*, not *"we talked about bindings"*.
 - Include the reason when the person gave one. A rule without its why gets misapplied.
+- State what was actually observed; check a cause before naming it, never guess one. A
+  stored record is what the retrospective later acts on — a guessed cause can send it to
+  fix code that was never broken.
 - A couple of sentences at most.
 - Write it in English, whatever language the session was conducted in — a stored
   record is an artifact. Quote the person's own wording only where the exact phrasing

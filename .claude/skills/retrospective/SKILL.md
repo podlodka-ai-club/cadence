@@ -235,7 +235,7 @@ keyed by xuid, exactly as in `process`.
 ## 4. Result
 
 ```
-result: <resolved | nothing-to-do>
+result: <resolved | still-open | nothing-to-do>
 merged: <n records over n changes>
   - <url> — <n records> — <resolution>
 declined: <n records over n changes>
@@ -246,5 +246,9 @@ unreachable: <n records still inprogress>
   - <url> — what failed
 ```
 
-`nothing-to-do` means nothing was `inprogress` at the start. Link the `console_url` of
-the write once. Then stop.
+`nothing-to-do` means nothing was `inprogress` at the start. `resolved` means at least one
+record was closed this run. `still-open` means records were `inprogress` at the start and
+none of them closed — every pull request is still open, every draft rule still `Draft`, or
+the change behind a record could not be reached — the person has not decided anything yet,
+and the run does not read as a success it was not. Link the `console_url` of the write
+once. Then stop.

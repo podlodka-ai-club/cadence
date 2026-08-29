@@ -23,6 +23,12 @@ and put your own scratch output there rather than in the tree. Never commit anyt
 it, and never make the project depend on a file there: a fresh clone gets an empty
 directory.
 
+## Installing plugins
+
+The auto-mode permission classifier refuses `claude plugin marketplace add` and `claude
+plugin install`; hand plugin installation to the person to run. `claude mcp add` is not
+subject to that refusal and can be run directly.
+
 ## Session start
 
 Check the working tree before doing anything else. If there are uncommitted changes, stop

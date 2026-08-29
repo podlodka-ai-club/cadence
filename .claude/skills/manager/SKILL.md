@@ -75,6 +75,16 @@ checkout and hand the subagent the absolute path. Do not copy the material into 
 worktree, and do not replace `untracked/` with a symlink: the `.gitkeep` is tracked, and
 removing it dirties the tree the run was supposed to keep clean.
 
+**Skill version.** A subagent's skill content loads from the main checkout, on whatever
+branch and commit it currently sits — never from the worktree, which holds only the work.
+A run launched while the main checkout carries commits that have not reached `origin/main`
+therefore executes a skill version that a later check cannot see: a retrospective run
+deciding whether the repository "already says it" reads the worktree, which is detached at
+`origin/main`, so a rule added locally but not pushed looks absent and can be proposed a
+second time. Launching a run requires the main checkout to be on `main`, pushed, and
+clean — cron's launcher is the place to hold that line, since nothing inside a run can
+tell a genuine unpushed edit from one it should trust.
+
 ## 4. Run the work
 
 One subagent per launch — `general-purpose`, on **`sonnet`** — at most **five** at a time.

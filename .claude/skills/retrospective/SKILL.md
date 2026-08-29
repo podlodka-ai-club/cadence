@@ -99,6 +99,12 @@ Similar records are handled together: one change, every record it rests on.
 
 Three channels. A change goes to exactly one of them, and one run makes one change.
 
+A pull request this run itself opens is not part of the process until the person merges
+it: the run must not turn around and act on another record in the same run as if the
+rule it just proposed were already in effect. A run that opens a PR adding a policy does
+not get to use that policy before it is merged — the next run, once it has, is what gets
+to rely on it.
+
 **Pull request** — for a rule of the interactive process (`CLAUDE.md`) or of a skill
 (its `SKILL.md`). Branch from a fresh `main` as `<type>/retro-<short-slug>`, where the
 type is the Conventional Commits type of the change (`docs` for `CLAUDE.md`, `feat` or

@@ -122,8 +122,17 @@ git -C "$WORKTREE" log --oneline HEAD --not --remotes
 Both empty — the run left nothing behind:
 
 ```bash
+BRANCH="$(git -C "$WORKTREE" branch --show-current)"
 git -C "$MAIN" worktree remove "$WORKTREE"
+[ -n "$BRANCH" ] && git -C "$MAIN" branch -D "$BRANCH"
 ```
+
+`git worktree remove` deletes the worktree but not a branch checked out inside it — a
+skill that created one (the retrospective's `<type>/retro-<short-slug>`, say) leaves it
+behind in the main checkout's refs, and nothing else prunes it. The `log` check above
+already proved every commit on it reached a remote, so the local ref is a spare copy, not
+the only one, and deleting it is safe. A run that stayed detached (`no-change`,
+`nothing-to-do`) made no branch, so `BRANCH` is empty and there is nothing to delete.
 
 Either one prints something — there are uncommitted changes or commits that reached no
 remote. Keep the worktree and name its path in the report. Removing it would destroy the

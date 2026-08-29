@@ -96,6 +96,8 @@ Run the <skill> skill with the argument <argument>.
 <The xmemory session id, when the skill takes one.>
 
 Report what the skill reports. Do not run close-session — the manager closes the session.
+Do not remove or otherwise clean up the worktree — that is step 6, and it is the
+manager's alone.
 ```
 
 Generate one xmemory session id for the whole run — `claude-<10 lowercase letters>` — and

@@ -53,8 +53,12 @@ is `nothing-to-do` — say so rather than launching an agent to discover it.
 One repository, several sessions: a shared checkout means two runs fighting over one HEAD
 and one index. Every run therefore works in a worktree of its own.
 
+`$CLAUDE_PROJECT_DIR` is not reliably set in the Bash tool's environment — expect it
+empty and the recipe below to build every path off an empty string. Resolve the main
+checkout's own absolute path instead:
+
 ```bash
-MAIN="$CLAUDE_PROJECT_DIR"
+MAIN="$(git rev-parse --show-toplevel)"
 RUN_ID="$(date -u +%Y-%m-%d-%H%M%S)"
 WORKTREE="$(dirname "$MAIN")/$(basename "$MAIN")-worktrees/$RUN_ID"
 

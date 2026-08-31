@@ -252,7 +252,7 @@ keyed by xuid, exactly as in `process`.
 ## 4. Result
 
 ```
-result: <resolved | nothing-to-do>
+result: <resolved | no-change | nothing-to-do>
 merged: <n records over n changes>
   - <url> — <n records> — <resolution>
 declined: <n records over n changes>
@@ -263,5 +263,7 @@ unreachable: <n records still inprogress>
   - <url> — what failed
 ```
 
-`nothing-to-do` means nothing was `inprogress` at the start. Link the `console_url` of
-the write once. Then stop.
+`nothing-to-do` means nothing was `inprogress` at the start. `no-change` means the
+backlog was not empty but nothing on it could be resolved yet — every PR still open,
+every draft rule still `Draft`, or the change unreachable; `resolved` is only for a run
+that closed at least one record. Link the `console_url` of the write once. Then stop.

@@ -91,7 +91,9 @@ Every prompt says four things and no more:
 Work in <WORKTREE>. Every command runs from there — it is a git worktree of this
 repository, detached at origin/main.
 
-Run the <skill> skill with the argument <argument>.
+Run the <skill> skill with the argument <argument>. Read
+<WORKTREE>/.claude/skills/<skill>/SKILL.md yourself and follow that copy, not whatever
+the Skill tool injects.
 <Any path the task names, absolute, in the main checkout.>
 <The xmemory session id, when the skill takes one.>
 
@@ -99,6 +101,10 @@ Report what the skill reports. Do not run close-session — the manager closes t
 Do not remove or otherwise clean up the worktree — that is step 6, and it is the
 manager's alone.
 ```
+
+The Skill tool injects the skill's text from the main checkout, not from the worktree, so
+it can be stale relative to the worktree's own copy — the prompt has to say so, or the
+subagent has no reason to distrust it.
 
 Generate one xmemory session id for the whole run — `claude-<10 lowercase letters>` — and
 pass the same one to every subagent that needs it, so a batch traces as a batch.

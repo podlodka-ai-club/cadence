@@ -23,6 +23,15 @@ and put your own scratch output there rather than in the tree. Never commit anyt
 it, and never make the project depend on a file there: a fresh clone gets an empty
 directory.
 
+## xmemory
+
+At session start the harness may warn that the generic `plugin:xmemory:xmemory` and
+`plugin:xmemory:xmemory-admin` servers need authentication. That warning is about the
+account-wide connectors, not about this project's own instances — `Claude Code Sessions`,
+`City Events & Places`, `Filter Rules`, bound in `.xmemory.json` — whose tools keep
+working regardless. Do not read the warning as xmemory being unavailable; check whether
+the instance a task actually needs is one of the bound ones before concluding otherwise.
+
 ## Session start
 
 Check the working tree before doing anything else. If there are uncommitted changes, stop

@@ -106,6 +106,19 @@ Similar records are handled together: one change, every record it rests on.
 
 ## 4. Act
 
+Before opening anything, check whether the loop already has a change outstanding:
+
+```
+read(query="Every Session with project_name cadence and status inprogress, all fields.",
+     read_mode="xresponse")
+```
+
+If any record comes back, this run opens none of its own — a PR still open or a draft
+rule still `Draft` means the person has not decided the last change yet, and piling a new
+one on top only grows the stack they have to work through. Leave the record this run
+would have acted on `unprocessed` and report `no-change`; run `sync` to find out whether
+the outstanding change has been decided, which is what makes room for the next one.
+
 Three channels. A change goes to exactly one of them, and one run makes one change.
 
 A pull request this run itself opens is not part of the process until the person merges
@@ -173,6 +186,8 @@ not resolve is left exactly as it was.
 - At most **ten** records touched per run, counting closures.
 - One change per run. Once a PR, a draft rule or an issue is out, update the records and
   go to the report — do not start a second change even if the next record is obvious.
+- No new change while an earlier one is still `inprogress` — one change awaits a decision
+  at a time, never a pile of them.
 
 ## 6. Result
 

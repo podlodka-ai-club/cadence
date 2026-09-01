@@ -263,5 +263,10 @@ unreachable: <n records still inprogress>
   - <url> — what failed
 ```
 
+The `open` headline's `N` is the total of every group listed beneath it — pull-request
+groups and draft-rule groups alike, not pull requests only. Sum the whole breakdown before
+writing the headline; a count that only tallies the PR groups undercounts by however many
+records the draft-rule groups carry.
+
 `nothing-to-do` means nothing was `inprogress` at the start. Link the `console_url` of
 the write once. Then stop.

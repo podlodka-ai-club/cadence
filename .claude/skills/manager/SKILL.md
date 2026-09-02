@@ -126,6 +126,26 @@ that succeeded stand; the ones never launched are reported as left.
 
 ## 6. Clean the workspace
 
+A subagent's report is not proof of what it left on disk — verify the tree itself,
+both copies of it, rather than taking the report's word for where the work landed.
+
+Check the main checkout first. Step 3 promised it would go untouched, and CLAUDE.md's
+session-start rule means it was clean when this run began — a one-shot process does not
+start otherwise. Anything found here now was left by a subagent that worked in the main
+checkout instead of the worktree it was told to use:
+
+```bash
+git -C "$MAIN" status --porcelain
+git -C "$MAIN" branch --show-current
+```
+
+Dirty, or off `main` — leave it exactly as found, the same as step 3 already promises
+for material that was there before the run, and report it as `dirty, left alone` in the
+result below. The manager cleaning up a subagent's mess would repeat the same overreach
+that caused it.
+
+Then the worktree:
+
 ```bash
 git -C "$WORKTREE" status --porcelain
 git -C "$WORKTREE" log --oneline HEAD --not --remotes

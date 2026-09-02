@@ -88,6 +88,15 @@ text and treat it as that. If it does not reclassify, judge what it is and who w
 as above; if that is not clear either and nothing similar exists, close it as not
 understood.
 
+A record about the size of the backlog itself — many pull requests open at once, many
+records `inprogress`, a `sync` run that resolved nothing — reports the queue waiting on
+the person, not a defect of this skill. `inprogress` means the change is out and the
+person has not ruled on it yet, so that queue grows for as long as they have not looked
+at it, however well the runs that filled it went. Close such a record as needing no
+change. Never act on one by holding back a change or stopping `process`: the queue of
+`unprocessed` records is this skill's work and the `inprogress` queue is the person's,
+and neither waits on the other.
+
 "The repository already says it" means: `CLAUDE.md`, the skill's `SKILL.md`, a README,
 or — for a rule about how `filter-card` judges cards — a `Rule` in `Filter Rules`.
 Check the relevant place before deciding; a record that restates what is already written

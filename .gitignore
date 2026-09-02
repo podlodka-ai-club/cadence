@@ -14,3 +14,6 @@ __pycache__/
 
 # Local virtualenv
 .venv/
+
+# Which cards a panel run works on: personal, and different every run
+admin/config.json

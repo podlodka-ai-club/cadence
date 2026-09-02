@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cadence — answering cards</title>
+<style>
+  :root {
+    --bg: #faf9f7;
+    --panel: #ffffff;
+    --ink: #1d1c1a;
+    --muted: #6d6a65;
+    --line: #e2ded8;
+    --accept: #1f7a4d;
+    --reject: #a33232;
+    --skip: #6d6a65;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16171a;
+      --panel: #1e2024;
+      --ink: #e8e6e3;
+      --muted: #9b978f;
+      --line: #32353b;
+      --accept: #4bbd84;
+      --reject: #e0736d;
+      --skip: #9b978f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex;
+    justify-content: center;
+  }
+  main { width: min(760px, 100%); padding: 24px 20px 40px; }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+    color: var(--muted);
+    font-size: 13px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+    margin-bottom: 18px;
+  }
+  .where { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .counts b { color: var(--ink); font-weight: 600; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px 22px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 17px;
+    max-height: 52vh;
+    overflow-y: auto;
+  }
+  .other { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+  .other:hover { color: var(--ink); }
+  .previous {
+    margin: 12px 2px 0;
+    font-size: 13px;
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .links { margin: 12px 2px 0; font-size: 13px; }
+  .links a { color: var(--muted); display: block; overflow-wrap: anywhere; }
+
+  fieldset {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin: 22px 0 18px;
+    padding: 12px 16px 14px;
+  }
+  legend { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; padding: 0 6px; }
+  label {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 5px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  label:hover { background: var(--panel); }
+  label .num {
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    min-width: 12px;
+  }
+  label .what { color: var(--muted); font-size: 13px; }
+  label .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
+
+  .buttons { display: flex; gap: 10px; }
+  button {
+    flex: 1;
+    padding: 12px 10px;
+    font: inherit;
+    font-weight: 600;
+    color: var(--panel);
+    background: var(--ink);
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button kbd { font-weight: 400; opacity: .65; font-family: inherit; }
+  #accept { background: var(--accept); }
+  #reject { background: var(--reject); }
+  #skip, #prev { background: transparent; color: var(--skip); border: 1px solid var(--line); flex: 0 0 110px; }
+  #prevDone {
+    margin-top: 18px;
+    background: transparent;
+    color: var(--skip);
+    border: 1px solid var(--line);
+    flex: 0;
+    padding: 10px 22px;
+  }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+
+  .note { margin-top: 14px; font-size: 13px; min-height: 20px; color: var(--muted); }
+  .note.bad { color: var(--reject); }
+  .done { text-align: center; padding: 60px 0; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="where" id="where"></span>
+    <span class="counts" id="counts"></span>
+    <a class="other" id="other" href="/review"></a>
+  </header>
+
+  <div id="work" hidden>
+    <div class="card" id="text"></div>
+    <div class="links" id="links"></div>
+    <div class="previous" id="previous"></div>
+
+    <fieldset>
+      <legend>why not an event</legend>
+      <div id="reasons"></div>
+    </fieldset>
+
+    <div class="buttons">
+      <button id="prev" hidden>prev <kbd>p</kbd></button>
+      <button id="accept">accept <kbd>a</kbd></button>
+      <button id="reject">reject <kbd>r</kbd></button>
+      <button id="skip">skip <kbd>s</kbd></button>
+    </div>
+    <div class="note" id="note"></div>
+  </div>
+
+  <div class="done" id="done" hidden>
+    <div id="doneWord"></div>
+    <button id="prevDone" hidden>prev <kbd>p</kbd></button>
+  </div>
+</main>
+
+<script>
+// The same page serves both walks: answering cards that have none, and going
+// back over answers already given. Which one it is, the address says.
+const REVIEW = location.pathname.startsWith("/review");
+const BASE = REVIEW ? "/review" : "";
+const MOVE_ON = REVIEW ? "/review/next" : "/skip";
+
+const el = (id) => document.getElementById(id);
+let card = null;
+let reasons = {};
+
+async function ask(path, body) {
+  const options = body
+    ? {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)}
+    : {};
+  const response = await fetch(path, options);
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error || response.statusText);
+  return payload;
+}
+
+function drawReasons(list) {
+  if (Object.keys(reasons).length) return;
+  reasons = list;
+  el("reasons").innerHTML = Object.entries(list).map(([code, what], i) => `
+    <label>
+      <span class="num">${i + 1}</span>
+      <input type="checkbox" value="${code}">
+      <span><span class="code">${code}</span> <span class="what">— ${what}</span></span>
+    </label>`).join("");
+  el("reasons").addEventListener("change", refresh);
+}
+
+const ticked = () =>
+  [...document.querySelectorAll("#reasons input:checked")].map((box) => box.value);
+
+function refresh() {
+  // A card with a reason against it is a refusal, and one with none is not:
+  // whichever button would contradict the ticks is out of reach.
+  const marked = ticked().length > 0;
+  el("reject").disabled = !marked;
+  el("accept").disabled = marked;
+}
+
+function counts(p) {
+  return REVIEW
+    ? `<b>${p.seen}</b> looked at · <b>${p.left}</b> left of ${p.total}`
+    : `<b>${p.answered}</b> answered · ${p.skipped} skipped · <b>${p.left}</b> left of ${p.total}`;
+}
+
+function draw(state) {
+  drawReasons(state.reasons);
+  el("counts").innerHTML = counts(state.progress);
+  el("prev").disabled = el("prevDone").disabled = state.progress.seen === 0;
+
+  card = state.card;
+  el("work").hidden = !card;
+  el("done").hidden = !!card;
+  if (!card) { el("where").textContent = ""; return; }
+
+  el("where").textContent = `${card.source}/${card.externalId} · ${card.date.slice(0, 16).replace("T", " ")}`;
+  el("text").textContent = card.text;
+  el("text").scrollTop = 0;
+  el("links").innerHTML = card.links
+    .map((url) => `<a href="${url}" target="_blank" rel="noreferrer">${url}</a>`).join("");
+
+  // Going back over an answer starts from the answer: the reasons are already
+  // ticked, so changing one's mind is a tick away rather than a fresh decision.
+  const answer = state.answer;
+  el("previous").textContent = answer
+    ? (answer.accept ? "answered: accept" : "answered: reject — " + answer.reasons.join(", "))
+    : "";
+  document.querySelectorAll("#reasons input").forEach((box) => {
+    box.checked = !!answer && answer.reasons.includes(box.value);
+  });
+  refresh();
+  say("");
+}
+
+function say(message, bad) {
+  el("note").textContent = message;
+  el("note").className = bad ? "note bad" : "note";
+}
+
+async function send(path, body) {
+  if (!card) return;
+  const here = card;
+  card = null;  // one press, one request: no double submit while this is in flight
+  try {
+    draw(await ask(path, {source: here.source, externalId: here.externalId, ...body}));
+  } catch (error) {
+    card = here;
+    say(error.message, true);
+  }
+}
+
+const accept = () => ticked().length ? say("untick the reasons to accept", true)
+                                     : send(BASE + "/answer", {accept: true, reasons: []});
+const reject = () => ticked().length ? send(BASE + "/answer", {accept: false, reasons: ticked()})
+                                     : say("a refusal needs a reason", true);
+const onward = () => send(MOVE_ON, {});
+// Stepping back decides nothing, so it does not name a card and works at the
+// end of the walk too — which is where a misplaced press gets noticed.
+const back = () => REVIEW && ask("/review/back", {}).then(draw).catch((e) => say(e.message, true));
+
+el("accept").onclick = accept;
+el("reject").onclick = reject;
+el("skip").onclick = onward;
+
+el("skip").innerHTML = REVIEW ? "next <kbd>n</kbd>" : "skip <kbd>s</kbd>";
+el("other").textContent = REVIEW ? "← answering" : "review answers →";
+el("other").href = REVIEW ? "/" : "/review";
+el("doneWord").textContent = REVIEW ? "That is every answer." : "Nothing left to answer.";
+el("prev").hidden = !REVIEW;
+el("prevDone").hidden = !REVIEW;
+el("prev").onclick = back;
+el("prevDone").onclick = back;
+
+document.addEventListener("keydown", (event) => {
+  if (event.metaKey || event.ctrlKey || event.altKey) return;
+  const digit = Number(event.key);
+  if (digit >= 1 && digit <= Object.keys(reasons).length) {
+    const box = document.querySelectorAll("#reasons input")[digit - 1];
+    box.checked = !box.checked;
+    refresh();
+    event.preventDefault();
+    return;
+  }
+  if (event.key === "p") back();
+  else if (event.key === "a") accept();
+  else if (event.key === "r" || event.key === "Enter") reject();
+  else if (event.key === "s" || event.key === "n") onward();
+});
+
+ask(BASE + "/state").then(draw).catch((error) => say(error.message, true));
+</script>
+</body>
+</html>

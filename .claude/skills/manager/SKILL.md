@@ -79,6 +79,13 @@ checkout and hand the subagent the absolute path. Do not copy the material into 
 worktree, and do not replace `untracked/` with a symlink: the `.gitkeep` is tracked, and
 removing it dirties the tree the run was supposed to keep clean.
 
+**This skill's own version.** The Skill tool injected this very `manager` text from the
+main checkout before this step ran, on whatever commit the checkout sat at — the same
+staleness that step 4 warns a subagent about applies to the manager itself, not only to
+what it launches. Once the worktree exists, re-read
+`<WORKTREE>/.claude/skills/manager/SKILL.md` and follow that copy for the rest of the
+run, in place of whatever the injected text said.
+
 ## 4. Run the work
 
 One subagent per launch — `general-purpose`, on **`sonnet`** — at most **five** at a time.

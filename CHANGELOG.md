@@ -10,6 +10,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - `parsers/`: parsers that read different sources of posts and build cards.
+- `storage/`: the evaluation set in MongoDB — the cards and the answers about
+  them — with the commands that create the database and fill it.
 - `telegram_history`: builds cards from a Telegram Desktop channel export.
 - `close-session` skill: reads the session transcript and records the rules the
   person set, the corrections they made, and what subagents found as `Session`

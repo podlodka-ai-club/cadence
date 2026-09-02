@@ -8,3 +8,9 @@
 # Python bytecode
 __pycache__/
 *.py[cod]
+
+# Database credentials: holds a password, must never be committed
+.env
+
+# Local virtualenv
+.venv/

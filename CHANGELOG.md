@@ -23,6 +23,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   session.
 - `scripts/`: unattended launchers that run the manager on the retrospective's two
   tasks, one run of a job at a time, logging each run.
+- `scripts/sync-main.sh`: fast-forwards the checkout cron runs from, so a run
+  follows the current skills rather than the ones it was cloned with.
 
 ### Changed
 

@@ -88,16 +88,40 @@ text and treat it as that. If it does not reclassify, judge what it is and who w
 as above; if that is not clear either and nothing similar exists, close it as not
 understood.
 
+A record about the size of the backlog itself — many pull requests open at once, many
+records `inprogress`, a `sync` run that resolved nothing — reports the queue waiting on
+the person, not a defect of this skill. `inprogress` means the change is out and the
+person has not ruled on it yet, so that queue grows for as long as they have not looked
+at it, however well the runs that filled it went. Close such a record as needing no
+change. Never act on one by holding back a change or stopping `process`: the queue of
+`unprocessed` records is this skill's work and the `inprogress` queue is the person's,
+and neither waits on the other.
+
 "The repository already says it" means: `CLAUDE.md`, the skill's `SKILL.md`, a README,
 or — for a rule about how `filter-card` judges cards — a `Rule` in `Filter Rules`.
 Check the relevant place before deciding; a record that restates what is already written
 is closed, not acted on.
+
+The same check covers work already out for review: before treating a record as needing a
+change, check the open pull requests (`gh pr list --state open`) for one that already
+makes it. A record whose change is already an open, unmerged pull request is not acted on
+again — it is not left `unprocessed` either, since nothing will ever pick it up a second
+time and call it done. Treat it as if this run had opened that pull request: `inprogress`,
+with resolution `"PR opened: <url>"` pointing at the existing PR. Linking a record to a
+pull request already out for review is bookkeeping, not this run's one change, so weighing
+continues afterward and a later record can still be the one the run acts on.
 
 Similar records are handled together: one change, every record it rests on.
 
 ## 4. Act
 
 Three channels. A change goes to exactly one of them, and one run makes one change.
+
+A pull request this run itself opens is not part of the process until the person merges
+it: the run must not turn around and act on another record in the same run as if the
+rule it just proposed were already in effect. A run that opens a PR adding a policy does
+not get to use that policy before it is merged — the next run, once it has, is what gets
+to rely on it.
 
 **Pull request** — for a rule of the interactive process (`CLAUDE.md`) or of a skill
 (its `SKILL.md`). Branch from a fresh `main` as `<type>/retro-<short-slug>`, where the
@@ -168,14 +192,16 @@ Print, in this order:
 result: <change | no-change | nothing-to-do>
 change: <PR url | issue url | "draft rule in Filter Rules"> — one line on what it says
 processed: <n>
-  - <date> <text_type> — <resolution>
+  - <xuid> <date> <text_type> — <resolution>
 inprogress: <n>
-  - <date> <text_type> — <resolution>
+  - <xuid> <date> <text_type> — <resolution>
 left: <n> still unprocessed
 ```
 
-`nothing-to-do` means the backlog was empty at the start. Link the `console_url` of the
-write once. Then stop.
+`nothing-to-do` means the backlog was empty at the start. The `xuid` is there because
+`close-session` stamps every record of one session with the same `date`, so a report
+that named records by `date` alone could not tell two of them apart; the `xuid` always
+can. Link the `console_url` of the write once. Then stop.
 
 # Task `sync`
 
@@ -245,6 +271,11 @@ open: <n records still inprogress>
 unreachable: <n records still inprogress>
   - <url> — what failed
 ```
+
+The `open` headline's `N` is the total of every group listed beneath it — pull-request
+groups and draft-rule groups alike, not pull requests only. Sum the whole breakdown before
+writing the headline; a count that only tallies the PR groups undercounts by however many
+records the draft-rule groups carry.
 
 `nothing-to-do` means nothing was `inprogress` at the start. Link the `console_url` of
 the write once. Then stop.

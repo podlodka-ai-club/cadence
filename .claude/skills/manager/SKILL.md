@@ -53,8 +53,12 @@ is `nothing-to-do` — say so rather than launching an agent to discover it.
 One repository, several sessions: a shared checkout means two runs fighting over one HEAD
 and one index. Every run therefore works in a worktree of its own.
 
+`$CLAUDE_PROJECT_DIR` is not reliably set in the Bash tool's environment — expect it
+empty and the recipe below to build every path off an empty string. Resolve the main
+checkout's own absolute path instead:
+
 ```bash
-MAIN="$CLAUDE_PROJECT_DIR"
+MAIN="$(git rev-parse --show-toplevel)"
 RUN_ID="$(date -u +%Y-%m-%d-%H%M%S)"
 WORKTREE="$(dirname "$MAIN")/$(basename "$MAIN")-worktrees/$RUN_ID"
 
@@ -91,12 +95,20 @@ Every prompt says four things and no more:
 Work in <WORKTREE>. Every command runs from there — it is a git worktree of this
 repository, detached at origin/main.
 
-Run the <skill> skill with the argument <argument>.
+Run the <skill> skill with the argument <argument>. Read
+<WORKTREE>/.claude/skills/<skill>/SKILL.md yourself and follow that copy, not whatever
+the Skill tool injects.
 <Any path the task names, absolute, in the main checkout.>
 <The xmemory session id, when the skill takes one.>
 
 Report what the skill reports. Do not run close-session — the manager closes the session.
+Do not remove or otherwise clean up the worktree — that is step 6, and it is the
+manager's alone.
 ```
+
+The Skill tool injects the skill's text from the main checkout, not from the worktree, so
+it can be stale relative to the worktree's own copy — the prompt has to say so, or the
+subagent has no reason to distrust it.
 
 Generate one xmemory session id for the whole run — `claude-<10 lowercase letters>` — and
 pass the same one to every subagent that needs it, so a batch traces as a batch.
@@ -122,8 +134,17 @@ git -C "$WORKTREE" log --oneline HEAD --not --remotes
 Both empty — the run left nothing behind:
 
 ```bash
+BRANCH="$(git -C "$WORKTREE" branch --show-current)"
 git -C "$MAIN" worktree remove "$WORKTREE"
+[ -n "$BRANCH" ] && git -C "$MAIN" branch -D "$BRANCH"
 ```
+
+`git worktree remove` deletes the worktree but not a branch checked out inside it — a
+skill that created one (the retrospective's `<type>/retro-<short-slug>`, say) leaves it
+behind in the main checkout's refs, and nothing else prunes it. The `log` check above
+already proved every commit on it reached a remote, so the local ref is a spare copy, not
+the only one, and deleting it is safe. A run that stayed detached (`no-change`,
+`nothing-to-do`) made no branch, so `BRANCH` is empty and there is nothing to delete.
 
 Either one prints something — there are uncommitted changes or commits that reached no
 remote. Keep the worktree and name its path in the report. Removing it would destroy the

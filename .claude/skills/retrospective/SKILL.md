@@ -277,5 +277,7 @@ groups and draft-rule groups alike, not pull requests only. Sum the whole breakd
 writing the headline; a count that only tallies the PR groups undercounts by however many
 records the draft-rule groups carry.
 
-`nothing-to-do` means nothing was `inprogress` at the start. Link the `console_url` of
-the write once. Then stop.
+`nothing-to-do` means this run had nothing to settle: nothing was `inprogress` at the
+start, or the records that were are all still waiting on the person — every pull request
+open, every draft rule still `Draft`. That queue is the person's, not a result this run
+fell short of. Link the `console_url` of the write once. Then stop.

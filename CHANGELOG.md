@@ -29,6 +29,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   tasks, one run of a job at a time, logging each run.
 - `scripts/sync-main.sh`: fast-forwards the checkout cron runs from, so a run
   follows the current skills rather than the ones it was cloned with.
+- `telegram_live`: reads Telegram channels as they publish and keeps the posts
+  as cards.
+- `storage`: the sources being read, and where the reading got to in each.
+- `storage`: a command that adds a source to read.
+- a sink that puts the cards a parser built into the database.
 
 ### Changed
 
@@ -37,6 +42,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   time of whoever made the export.
 - `telegram_history`: takes the source the cards carry, for an export whose
   directory is not named after it.
+- `storage.setup`: takes the collections to bring up, for a database that holds
+  only some of them.
 - `close-session` skill: records who a fact came from (`author`).
 - `retrospective` skill: takes the task to run as its argument — `process` for new
   records, `sync` to resolve the ones an earlier run left open.

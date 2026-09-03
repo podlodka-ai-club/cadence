@@ -12,6 +12,9 @@ __pycache__/
 # Database credentials: holds a password, must never be committed
 .env
 
+# A signed-in Telegram account: whoever holds it is the account
+.telegram.session*
+
 # Local virtualenv
 .venv/
 

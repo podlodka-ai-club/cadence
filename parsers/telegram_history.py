@@ -23,13 +23,16 @@ What is dropped, and why:
 - messages whose text is empty. Those are the other frames of an album: the
   caption rides on one message of it and its siblings carry only a photo, so
   there is nothing to put on a card.
+
+The time on a card is UTC, read from `date_unixtime`. The `date` beside it is
+the local time of whoever made the export and says nothing about the post.
 """
 import argparse
 import json
 import os
 import sys
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 
 if __package__ in (None, ""):  # run by path rather than with -m: put the repo on the path
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -61,6 +64,21 @@ def post_text(message):
     if isinstance(text, list):
         return "".join(part if isinstance(part, str) else part.get("text", "") for part in text)
     return ""
+
+
+def post_date(message):
+    """When the post was made, in UTC.
+
+    The export states the time twice: `date`, in the local time of the machine
+    that made the export, and `date_unixtime`, the moment itself. Only the
+    second one means the same thing to a second reader, so an export that
+    lacks it is refused rather than read hours out.
+    """
+    unixtime = message.get("date_unixtime")
+    if unixtime is None:
+        raise ValueError(
+            "message %s has no date_unixtime: this export is too old to read" % message.get("id"))
+    return datetime.fromtimestamp(int(unixtime), timezone.utc)
 
 
 def post_links(message):
@@ -97,7 +115,7 @@ def read_export(export_dir, tally=None):
         yield Card(
             id=message["id"],
             source=source,
-            date=datetime.fromisoformat(message["date"]),
+            date=post_date(message),
             text=text,
             links=post_links(message),
         )

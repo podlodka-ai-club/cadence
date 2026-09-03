@@ -44,7 +44,7 @@ nobody who they are.
 | | |
 | --- | --- |
 | `a` | accept: an event |
-| `1`–`5` | tick a reason |
+| `1`–`6` | tick a reason |
 | `r`, `Enter` | reject with the ticked reasons — at least one is needed |
 | `s`, `n` | skip, or move on without changing an answer |
 | `p` | back to the card before this one, going over answers |

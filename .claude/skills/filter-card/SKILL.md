@@ -1,85 +1,75 @@
 ---
 name: filter-card
-description: Decide whether a card describes an event a person could attend. A card that does is written to the `City Events & Places` xmemory instance as an Event; a card that does not is rejected, with the reason in the report. Under doubt the skill consults the rules stored in the `Filter Rules` instance. Use when asked to filter, triage or sort cards, or to turn cards into events, or when the user runs /filter-card. Takes the path to the card's JSON file as its argument, and optionally an xmemory session id.
+description: Decide whether a card is an event worth keeping, and return the verdict — accepted, or refused with reasons from a closed list. Use when asked to filter, triage or sort cards, to judge whether posts are events, or when the user runs /filter-card. Takes cards as paths to card JSON files, or as text pasted as it stands.
 ---
 
 # filter-card
 
-A card is one post as it stood in its source. This skill answers one question about it:
-**is this an event?** — and acts on the answer:
+A card is one post as it stood in its source. This skill answers one question about it —
+**is this an event a person could go to?** — and returns the answer as JSON.
 
-| Verdict | What happens |
-|---|---|
-| `pass` | the card is written to `City Events & Places` as an `Event` (and its `Place`, if named) |
-| `reject` | nothing is written; the report says why |
-
-The skill changes no code and no files in the tree.
+It writes nothing anywhere, reads nothing but the cards it was given, and changes no file
+in the tree. The answer is what the caller does something with.
 
 ## Arguments
 
-- **the card** — required: the path to one card, a JSON file with `id`, `source`, `date`,
-  `text`, `links` — the shape every parser produces (see `parsers/README.md`). Read it
-  as it is; the skill does not care where the file lives. With no path, ask for one.
-- **session id** — optional: an xmemory session id, `claude-<10 lowercase letters>`.
-  When given, use it; when not, generate one. Either way pass it as `session_id` on
-  every xmemory call.
+Cards, in either form, one or several:
 
-Given several paths, run the steps below for each card in turn; the rules (§2) are read
-once.
+- **a path** to a card JSON file — `id`, `source`, `date`, `text`, `links`. Read it as
+  it is; the skill does not care where the file lives.
+- **the text** of a card, pasted as it stands. Then there is no identity and no posting
+  date, and the text is judged on its own.
 
-## 1. Judge the card by its own text
+With no card given, ask for one.
 
-Read the card and decide: is this an event a person could attend — something with a
-when and a where that a reader could plan to go to — or an informational post (news,
-an announcement, a list, an ad, a note from the channel about itself) that should be
-rejected?
+## 1. Judge the card
 
-Grade the decision: **sure** or **in doubt**. Sure means a reader would not argue with
-it. Doubt is anything else.
+An event a person could go to has a when and a where: a reader could decide to be there.
+A card that carries one is accepted. Anything else is refused, with every reason below
+that applies to it — often more than one, as a roundup of undated events is both a
+roundup and undated.
 
-## 2. When in doubt, ask xmemory
+| Reason | What it means |
+|---|---|
+| `missing_event` | no event in the text: news, a photograph, a thought, the channel about itself |
+| `missing_time` | an event, but no date or time |
+| `missing_place` | an event, but no venue, or none a reader could find |
+| `multiple_events` | a roundup: several events, none of them the subject of the card |
+| `not_visit_worthy` | something happening in the city rather than an event to attend: a closed bridge, a jam, roadworks |
+| `unknown` | none of the above fits, or the card cannot be read with confidence — `note` says what stopped you |
 
-Read the rules from `Filter Rules` — once per run, on the first doubt, and keep them for
-the rest of it:
+Reach for a named reason first. When none of them fits the card, or the card leaves you
+unsure what it even is, refuse it as `unknown` and write in `note` what you could not
+settle — one or two sentences, plainly. An honest `unknown` is worth more than the
+nearest label forced onto a card it does not describe: it shows where the list falls
+short, while a wrong label hides it. `unknown` can stand alone, or beside the reasons
+that do fit.
 
+Judge the card by what it says. A date given relative to the posting date — *"tomorrow at
+seven"* — is a date, and a venue the card names is a venue whether or not you know the
+place. But nothing is supplied from outside the card: an event whose venue is only
+implied by the channel it was posted in has no venue.
+
+## 2. Return the verdict
+
+One JSON array, in a fenced `json` block, one object per card in the order the cards were
+given, and nothing else in the reply:
+
+```json
+[
+  {"source": "t.me/a_channel", "externalId": "1234", "accept": true, "reasons": []},
+  {"source": "t.me/a_channel", "externalId": "1235", "accept": false, "reasons": ["missing_time", "missing_place"]},
+  {"source": "t.me/a_channel", "externalId": "1236", "accept": false, "reasons": ["unknown"], "note": "a rehearsal open to anyone who asks the door — no listed reason covers a standing invitation with no occasion"}
+]
 ```
-read(query="List every Rule with status Active (text).", read_mode="raw-tables")
-```
 
-Only `Active` rules count; a `Draft` rule is one the person has not confirmed yet and is
-not applied. Each `Rule` is a plain-text instruction to you. Apply them to the card; a rule wins over
-your own reading. If they settle it, the verdict is sure, and the report says which rule
-decided. If they do not, `reject`, and say in the reason that the doubt stayed.
+| Field | |
+|---|---|
+| `source` | the card's `source`, as the file gives it |
+| `externalId` | the card's `id`, as a string |
+| `accept` | whether the card is an event worth keeping |
+| `reasons` | why it was refused; `[]` when it was accepted |
+| `note` | what could not be settled; only with `unknown`, left out otherwise |
 
-## 3. `pass` — write the event
-
-One `write_async` to `City Events & Places` per card, as free text: the instance
-extracts the `Event` (and the `Place`, linked through `event_place`) from it. Give it
-the card's text as it stands, and the context the text alone lacks:
-
-```
-Source post <source>/<id>, posted <card date>.
-Create an Event from this post. Dates in the text are relative to the posting date;
-store date_start and date_end in ISO 8601. If a venue is named, create or reuse the
-Place and link it to the event.
-
-<card text>
-
-Links: <card links>
-```
-
-Do not read the instance to check whether the event is there already; `Event` is keyed
-by `name`, and a second write of the same event updates the same record. Do not invent
-what the card does not say — leave `price`, `age`, `date_end` unset rather than guessed.
-
-## 4. `reject` — return the reason
-
-Nothing is written. The reason goes into the report: one or two sentences, in English,
-stating what made the card not an event — *"a list of museums open late; nothing is
-scheduled"* — and, when a stored rule decided, which one.
-
-## 5. Report
-
-One line per card: `<source>/<id>` — verdict — the event name or the reject reason. Mark
-a verdict decided by a stored rule and a reject where the doubt stayed. Link one
-`console_url` when an event was written.
+A card given as text has no identity: leave `source` and `externalId` out of its object
+rather than inventing them.

@@ -25,6 +25,7 @@ which only a refusal carries:
 | `missing_place` | an event, but no venue, or none a reader could find |
 | `multiple_events` | a roundup: several events, none of them the subject of the card |
 | `not_visit_worthy` | something happening in the city rather than an event to attend: a closed bridge, a jam, roadworks |
+| `unknown` | none of the listed reasons fits, or the card cannot be read with confidence |
 
 The list is closed: a reason outside it cannot be stored. The same words have to mean
 the same thing to everyone who writes here, so a new reason is a change to

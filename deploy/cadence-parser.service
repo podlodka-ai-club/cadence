@@ -1,0 +1,18 @@
+[Unit]
+Description=cadence: reads Telegram channels into MongoDB
+Documentation=file:///opt/cadence/deploy/README.md
+After=network-online.target mongod.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# The account that owns the checkout, the .env and the session file.
+User=cadence
+WorkingDirectory=/opt/cadence
+ExecStart=/opt/cadence/.venv/bin/python -m parsers.telegram_live
+# The parser keeps its place in the database, so a restart never loses a post.
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

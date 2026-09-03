@@ -16,6 +16,11 @@ PATH is an export directory, or a directory holding several of them. It and
 `--out` default to the working material of the repository this file lives in,
 whatever the current directory is.
 
+The source a card carries is read from the name of the export directory —
+`t.me kudagospb` becomes `t.me/kudagospb`. Telegram Desktop names its exports
+after the day it made them, so `--source` says the name outright when the
+directory does not.
+
 What is dropped, and why:
 
 - anything that is not a plain `message` — pinned-message notices and the
@@ -23,18 +28,21 @@ What is dropped, and why:
 - messages whose text is empty. Those are the other frames of an album: the
   caption rides on one message of it and its siblings carry only a photo, so
   there is nothing to put on a card.
+
+The time on a card is UTC, read from `date_unixtime`. The `date` beside it is
+the local time of whoever made the export and says nothing about the post.
 """
 import argparse
 import json
 import os
 import sys
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 
 if __package__ in (None, ""):  # run by path rather than with -m: put the repo on the path
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from parsers.card import Card
+from parsers.card import SOURCE_NAME, Card
 from parsers.sinks import CountingSink, JsonFileSink
 
 EXPORT_FILE = "result.json"
@@ -63,6 +71,21 @@ def post_text(message):
     return ""
 
 
+def post_date(message):
+    """When the post was made, in UTC.
+
+    The export states the time twice: `date`, in the local time of the machine
+    that made the export, and `date_unixtime`, the moment itself. Only the
+    second one means the same thing to a second reader, so an export that
+    lacks it is refused rather than read hours out.
+    """
+    unixtime = message.get("date_unixtime")
+    if unixtime is None:
+        raise ValueError(
+            "message %s has no date_unixtime: this export is too old to read" % message.get("id"))
+    return datetime.fromtimestamp(int(unixtime), timezone.utc)
+
+
 def post_links(message):
     """URLs the message carried, in order, without repeats.
 
@@ -78,10 +101,10 @@ def post_links(message):
     return links
 
 
-def read_export(export_dir, tally=None):
+def read_export(export_dir, tally=None, source=None):
     """Yield a Card per usable post in one export, counting what it passes over."""
     tally = Counter() if tally is None else tally
-    source = source_name(export_dir)
+    source = source or source_name(export_dir)
     with open(os.path.join(export_dir, EXPORT_FILE), encoding="utf-8") as fh:
         export = json.load(fh)
 
@@ -97,7 +120,7 @@ def read_export(export_dir, tally=None):
         yield Card(
             id=message["id"],
             source=source,
-            date=datetime.fromisoformat(message["date"]),
+            date=post_date(message),
             text=text,
             links=post_links(message),
         )
@@ -121,9 +144,14 @@ def main(argv=None):
                         help="export directory, or a directory of them (default: untracked/ of the repository)")
     parser.add_argument("--out", default=DEFAULT_OUT,
                         help="where cards are written (default: untracked/cards of the repository)")
+    parser.add_argument("--source", default=None, metavar="NAME",
+                        help="the source the cards carry, when the directory is not named after it")
     parser.add_argument("--dry-run", action="store_true",
                         help="read the exports and report, without writing anything")
     args = parser.parse_args(argv)
+
+    if args.source and not SOURCE_NAME.match(args.source):
+        sys.exit("not a usable source name: %r" % args.source)
 
     exports = []
     for path in args.paths or [DEFAULT_PATH]:
@@ -132,17 +160,20 @@ def main(argv=None):
         exports.extend(find_exports(path))
     if not exports:
         sys.exit("no export found: looked for %s under %s" % (EXPORT_FILE, ", ".join(args.paths)))
+    if args.source and len(exports) > 1:
+        sys.exit("--source names one export, but %d were found under %s" % (
+            len(exports), ", ".join(args.paths)))
 
     sink = CountingSink() if args.dry_run else JsonFileSink(args.out)
     with sink:
         for export_dir in exports:
             tally = Counter()
             sent = 0
-            for card in read_export(export_dir, tally):
+            for card in read_export(export_dir, tally, args.source):
                 sink.send(card)
                 sent += 1
-            print("%-24s %5d cards  (%d messages, %d without text, %d not a message)" % (
-                source_name(export_dir), sent, tally["messages"],
+            print("%-28s %5d cards  (%d messages, %d without text, %d not a message)" % (
+                args.source or source_name(export_dir), sent, tally["messages"],
                 tally["without text"], tally["not a message"]))
 
     if args.dry_run:

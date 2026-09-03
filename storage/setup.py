@@ -5,7 +5,12 @@ ones that are already there, and creates the indexes. Idempotent: running it
 twice changes nothing the second time, so it is the way to apply a change to
 the schema as well as the way to start an empty database.
 
-    python -m storage.setup [--db NAME]
+    python -m storage.setup [COLLECTION ...] [--db NAME]
+
+`COLLECTION` names what to bring up, and defaults to everything in the schema.
+Not every database holds every collection — the evaluation set keeps answers
+that production has no use for, production reads sources that the evaluation
+set never polls — so a database is told which of them are its own.
 
 `--db` defaults to MONGO_DB from `.env`.
 """
@@ -37,12 +42,21 @@ def ensure(db, name, definition):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("collections", nargs="*", metavar="COLLECTION",
+                        help="collections to bring up (default: all of them — %s)" % ", ".join(COLLECTIONS))
     parser.add_argument("--db", default=None, help="database to set up (default: MONGO_DB)")
     args = parser.parse_args(argv)
 
+    unknown = [name for name in args.collections if name not in COLLECTIONS]
+    if unknown:
+        raise SystemExit("no such collection: %s — the schema has %s" % (
+            ", ".join(unknown), ", ".join(COLLECTIONS)))
+    wanted = args.collections or list(COLLECTIONS)
+
     try:
         with database(args.db) as db:
-            for name, definition in COLLECTIONS.items():
+            for name in wanted:
+                definition = COLLECTIONS[name]
                 done = ensure(db, name, definition)
                 print("%-10s %-18s %d indexes" % (name, done, len(definition["indexes"])))
             print("%s is ready" % db.name)

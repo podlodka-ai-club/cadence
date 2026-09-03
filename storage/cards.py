@@ -41,3 +41,9 @@ def stored(db):
         )
         for document in db.cards.find().sort([("source", 1), ("date", 1), ("externalId", 1)])
     ]
+
+
+def newest_date(db, source):
+    """When the most recent card of a source was posted, or None if it has none."""
+    document = db.cards.find_one({"source": source}, {"date": 1}, sort=[("date", -1)])
+    return document["date"] if document else None

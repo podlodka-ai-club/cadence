@@ -93,4 +93,30 @@ COLLECTIONS = {
             ],
         },
     },
+    # A source the online parser reads, and where it got to in it. Adding a
+    # document here is how a channel starts being read; there is nothing to
+    # deploy. `lastMessageId` is the last post taken from the source, and the
+    # parser that owns the source is what knows how to ask for what came
+    # after it. A source that has no cursor yet is read from `startAt` on —
+    # history is loaded from an export, not fetched back through the source.
+    "sources": {
+        "indexes": [
+            {"keys": [("source", 1)], "name": "source", "unique": True},
+        ],
+        "validator": {
+            "$jsonSchema": {
+                "bsonType": "object",
+                "required": ["source", "enabled", "startAt"],
+                "additionalProperties": False,
+                "properties": {
+                    "_id": {"bsonType": "objectId"},
+                    "source": {"bsonType": "string", "pattern": SOURCE_PATTERN},
+                    "enabled": {"bsonType": "bool"},
+                    "startAt": {"bsonType": "date"},
+                    "lastMessageId": {"bsonType": ["int", "long"]},
+                    "lastPolledAt": {"bsonType": "date"},
+                },
+            },
+        },
+    },
 }

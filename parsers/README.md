@@ -11,8 +11,9 @@ Three parts, kept apart on purpose:
 | `<parser>.py` | reads one source and builds cards from it |
 | `sinks/` | takes the cards a parser built and puts them somewhere |
 
-A parser never writes anything itself — it hands each card to a sink. Today the sink that
-keeps cards writes JSON files; a database or a queue fits behind the same `send`.
+A parser never writes anything itself — it hands each card to a sink. Two sinks keep what
+they are given: one writes JSON files, the other puts cards in the database. A queue or a
+process launched per card fits behind the same `send`.
 
 ## The card
 
@@ -20,7 +21,7 @@ keeps cards writes JSON files; a database or a queue fits behind the same `send`
 {
   "id": "1234",
   "source": "t.me/example_channel",
-  "date": "2026-05-01T15:03:01",
+  "date": "2026-05-01T15:03:01+00:00",
   "text": "Open call for muralists, applications close on 12 May. Details at the link.",
   "links": ["https://example.org/open-call"]
 }
@@ -28,7 +29,8 @@ keeps cards writes JSON files; a database or a queue fits behind the same `send`
 
 `text` is what a reader sees, so a link contributes the words it was hung on and its URL
 goes to `links` instead. `id` is the post's id in its own source: it makes a card
-addressable and a re-run idempotent.
+addressable and a re-run idempotent. `date` is UTC, and a card refuses a date with no
+time zone — two parsers reading the same post have to agree about when it happened.
 
 `JsonFileSink` writes one file per card and derives the path from the card:
 
@@ -46,7 +48,7 @@ of each it dropped.
 From the repository root:
 
 ```
-python -m parsers.telegram_history [PATH ...] [--out DIR] [--dry-run]
+python -m parsers.telegram_history [PATH ...] [--out DIR] [--source NAME] [--dry-run]
 ```
 
 or by path, from anywhere — `-m` only finds the package when the root is the working
@@ -58,7 +60,41 @@ python <repo>/parsers/telegram_history.py [PATH ...]
 
 - `PATH` — an export directory, or a directory holding several of them.
 - `--out DIR` — where cards are written.
+- `--source NAME` — the source the cards carry, for one export at a time. Otherwise the
+  name comes from the export directory: `t.me kudagospb` becomes `t.me/kudagospb`, and
+  the directories Telegram Desktop names after the day it wrote them say nothing useful.
 - `--dry-run` — read the exports and report, without writing anything.
 
 `PATH` and `--out` default to the working material of the repository, wherever the
 command is run from. Python 3 and the standard library — nothing to install.
+
+## telegram_live
+
+The same channels as they publish. The channels it reads are the `sources` collection of
+the database, so adding one is a row rather than a deployment; each source keeps the id of
+the last post already stored, and a pass asks the channel for what came after it.
+
+It asks every so often rather than listening for updates: a pass that fails, a restart or a
+deploy in the middle of a channel all leave the cursor where the last stored card put it,
+and the next pass carries on from there. A post that arrives twice is written over the card
+it already has.
+
+```
+python -m parsers.telegram_live [--db NAME] [--interval SECONDS] [--once]
+```
+
+Once, before the first run, to sign the account in and leave a session behind:
+
+```
+python -m parsers.telegram_live --login
+```
+
+While developing — one channel named on the command line, the database neither read nor
+written, no cursor moved, cards to the terminal or to files:
+
+```
+python -m parsers.telegram_live --channel a_channel [--limit N] [--out DIR]
+```
+
+The application it signs in as, and where the session is kept, come from `.env`. It needs
+what `requirements.txt` asks for.

@@ -8,16 +8,21 @@ The fields:
 
     id      the post's id inside its own source, unique there
     source  where the post came from, as a path-safe name (`t.me/a_channel`)
-    date    when it was posted
+    date    when it was posted, as an aware datetime in UTC
     text    the post as a reader sees it, links reduced to their anchor text
     links   the URLs behind those links, in the order they appeared
+
+Dates are UTC, and a card refuses one without a time zone. A source states the
+time in whatever zone suits it, and the parser converts before the card is
+built — otherwise two parsers reading the same post disagree about when it
+happened, and nothing downstream can tell which of them to believe.
 
 Changing this shape changes every parser and every sink at once, so treat it as
 an interface, not as a convenient place to hang a field.
 """
 import re
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 # A source name is used to build a path, so it may only hold what a path
 # tolerates: segments of word characters joined by `/`, and no `.` or `..`
@@ -41,6 +46,9 @@ class Card:
             raise ValueError("not a usable source name: %r" % (self.source,))
         if not isinstance(self.date, datetime):
             raise ValueError("card date is not a datetime: %r" % (self.date,))
+        if self.date.tzinfo is None or self.date.tzinfo.utcoffset(self.date) is None:
+            raise ValueError("card %s of %s has a date with no time zone: %s" % (
+                self.id, self.source, self.date))
         if not self.text.strip():
             raise ValueError("card %s of %s has no text" % (self.id, self.source))
         object.__setattr__(self, "id", str(self.id))
@@ -48,8 +56,8 @@ class Card:
 
     @property
     def day(self):
-        """The date the post belongs to, as `YYYY-MM-DD`."""
-        return self.date.date().isoformat()
+        """The UTC date the post belongs to, as `YYYY-MM-DD`."""
+        return self.date.astimezone(timezone.utc).date().isoformat()
 
     def to_dict(self):
         return {

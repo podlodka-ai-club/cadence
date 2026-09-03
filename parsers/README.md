@@ -20,7 +20,7 @@ keeps cards writes JSON files; a database or a queue fits behind the same `send`
 {
   "id": "1234",
   "source": "t.me/example_channel",
-  "date": "2026-05-01T15:03:01",
+  "date": "2026-05-01T15:03:01+00:00",
   "text": "Open call for muralists, applications close on 12 May. Details at the link.",
   "links": ["https://example.org/open-call"]
 }
@@ -28,7 +28,8 @@ keeps cards writes JSON files; a database or a queue fits behind the same `send`
 
 `text` is what a reader sees, so a link contributes the words it was hung on and its URL
 goes to `links` instead. `id` is the post's id in its own source: it makes a card
-addressable and a re-run idempotent.
+addressable and a re-run idempotent. `date` is UTC, and a card refuses a date with no
+time zone — two parsers reading the same post have to agree about when it happened.
 
 `JsonFileSink` writes one file per card and derives the path from the card:
 

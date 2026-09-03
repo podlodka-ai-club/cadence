@@ -31,6 +31,8 @@ The list is closed: a reason outside it cannot be stored. The same words have to
 the same thing to everyone who writes here, so a new reason is a change to
 `schema.py` — and to whatever has already been answered under the old list.
 
+Dates are stored as they arrive on a card: UTC, and never without a zone.
+
 Mongo asks for no schema and would take a document of any shape, which is how a
 misspelled field becomes a second, silent one. Every collection therefore carries a
 validator, and a document that does not fit is refused at write time.

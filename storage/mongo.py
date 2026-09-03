@@ -55,7 +55,9 @@ def settings(path=ENV_FILE):
 def database(name=None):
     """A handle on the database, closed when the block ends."""
     uri, configured = settings()
-    client = MongoClient(uri, serverSelectionTimeoutMS=10000)
+    # tz_aware: Mongo keeps dates in UTC, and a card refuses a date without a
+    # zone, so a date read back has to come out aware as it went in.
+    client = MongoClient(uri, serverSelectionTimeoutMS=10000, tz_aware=True)
     try:
         yield client[name or configured]
     finally:

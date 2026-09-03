@@ -47,7 +47,7 @@ of each it dropped.
 From the repository root:
 
 ```
-python -m parsers.telegram_history [PATH ...] [--out DIR] [--dry-run]
+python -m parsers.telegram_history [PATH ...] [--out DIR] [--source NAME] [--dry-run]
 ```
 
 or by path, from anywhere — `-m` only finds the package when the root is the working
@@ -59,6 +59,9 @@ python <repo>/parsers/telegram_history.py [PATH ...]
 
 - `PATH` — an export directory, or a directory holding several of them.
 - `--out DIR` — where cards are written.
+- `--source NAME` — the source the cards carry, for one export at a time. Otherwise the
+  name comes from the export directory: `t.me kudagospb` becomes `t.me/kudagospb`, and
+  the directories Telegram Desktop names after the day it wrote them say nothing useful.
 - `--dry-run` — read the exports and report, without writing anything.
 
 `PATH` and `--out` default to the working material of the repository, wherever the

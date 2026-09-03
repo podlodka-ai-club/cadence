@@ -35,6 +35,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The card carries the time of a post in UTC and refuses a date without a zone.
 - `telegram_history`: reads the moment a post was made rather than the local
   time of whoever made the export.
+- `telegram_history`: takes the source the cards carry, for an export whose
+  directory is not named after it.
 - `close-session` skill: records who a fact came from (`author`).
 - `retrospective` skill: takes the task to run as its argument — `process` for new
   records, `sync` to resolve the ones an earlier run left open.

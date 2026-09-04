@@ -13,6 +13,7 @@ has the same three requests — where we are, a decision, move on:
     POST /review/answer  replace the answer and move on
     POST /review/next    leave the answer as it is and move on
     POST /review/back    step back to the card before this one
+    POST /review/open    jump to the card named in the request
 
 Every decision replies with where the walk now stands, so one press is one
 request. The panel writes to the database and has no notion of who is asking,
@@ -118,11 +119,12 @@ class Handler(BaseHTTPRequestHandler):
     # -- routes ----------------------------------------------------------
 
     def do_GET(self):
-        if self.path in ("/", "/review"):
+        path = self.path.split("?", 1)[0]  # `/review?card=…` is the page; the query is the page's to read
+        if path in ("/", "/review"):
             self.send_page()
-        elif self.path == "/state":
+        elif path == "/state":
             self.send_json(self.answering_state())
-        elif self.path == "/review/state":
+        elif path == "/review/state":
             self.send_json(self.review_state())
         else:
             self.send_json({"error": "no such route"}, status=404)
@@ -131,6 +133,19 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/review/back":
             # Stepping back decides nothing, so it needs no card to agree with.
             self.reviewing().step_back()
+            self.send_json(self.review_state())
+            return
+        if self.path == "/review/open":
+            # Jumping decides nothing either; the card it names only has to exist.
+            try:
+                request = self.body()
+            except ValueError:
+                self.send_json({"error": "the request is not JSON"}, status=400)
+                return
+            if not self.reviewing().go_to(request.get("source"), str(request.get("externalId") or "")):
+                self.send_json({"error": "no answered card %s/%s" % (
+                    request.get("source"), request.get("externalId"))}, status=404)
+                return
             self.send_json(self.review_state())
             return
         if self.path not in ("/answer", "/skip", "/review/answer", "/review/next"):

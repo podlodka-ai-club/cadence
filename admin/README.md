@@ -48,6 +48,7 @@ nobody who they are.
 | `r`, `Enter` | reject with the ticked reasons — at least one is needed |
 | `s`, `n` | skip, or move on without changing an answer |
 | `p` | back to the card before this one, going over answers |
+| `o` | open a card by name, going over answers |
 
 A ticked reason makes the card a refusal: `accept` is out of reach until the ticks are
 cleared, and `reject` until at least one is set.
@@ -63,6 +64,11 @@ on leaves the answer as it was; answering replaces it, and stepping back reaches
 card before — from the end of the walk as well, which is where a misplaced press tends
 to be noticed. The list is taken when the walk
 starts, so a card answered afterwards joins it the next time the panel is started.
+
+A card can be opened by name — `t.me/a_channel/1234`, typed into the box at the top
+(`o` puts the cursor there) or given in the address as `/review?card=t.me/a_channel/1234`,
+which is what a link from a report does. The walk jumps there and carries on from that
+card.
 
 ## Files
 

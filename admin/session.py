@@ -104,6 +104,15 @@ class Review:
     def move_on(self):
         self.at += 1
 
+    def go_to(self, source, external_id):
+        """Jump to one card, named by `(source, externalId)`. Returns whether it is
+        in the walk; the walk stays where it was when it is not."""
+        for index, card in enumerate(self.cards):
+            if key(card) == (source, external_id):
+                self.at = index
+                return True
+        return False
+
     def step_back(self):
         """Back to the card before this one, if there is one.
 

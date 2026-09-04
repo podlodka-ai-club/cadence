@@ -51,6 +51,16 @@
     margin-bottom: 18px;
   }
   .where { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  #open {
+    font: inherit;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--ink);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 3px 8px;
+    width: 220px;
+  }
   .counts b { color: var(--ink); font-weight: 600; }
 
   .card {
@@ -136,6 +146,7 @@
   <header>
     <span class="where" id="where"></span>
     <span class="counts" id="counts"></span>
+    <input id="open" placeholder="open t.me/a_channel/1234" hidden>
     <a class="other" id="other" href="/review"></a>
   </header>
 
@@ -268,6 +279,14 @@ const onward = () => send(MOVE_ON, {});
 // Stepping back decides nothing, so it does not name a card and works at the
 // end of the walk too — which is where a misplaced press gets noticed.
 const back = () => REVIEW && ask("/review/back", {}).then(draw).catch((e) => say(e.message, true));
+// Opening a card by name: `t.me/a_channel/1234` — the source is everything up to
+// the last slash. Typed into the box, or given as `?card=` in the address.
+function open(name) {
+  const cut = (name || "").trim().lastIndexOf("/");
+  if (cut < 1) return say("name a card as source/id", true);
+  return ask("/review/open", {source: name.slice(0, cut), externalId: name.slice(cut + 1)})
+    .then(draw).catch((e) => say(e.message, true));
+}
 
 el("accept").onclick = accept;
 el("reject").onclick = reject;
@@ -281,9 +300,16 @@ el("prev").hidden = !REVIEW;
 el("prevDone").hidden = !REVIEW;
 el("prev").onclick = back;
 el("prevDone").onclick = back;
+el("open").hidden = !REVIEW;
+el("open").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") { open(el("open").value); el("open").value = ""; el("open").blur(); }
+  else if (event.key === "Escape") el("open").blur();
+  event.stopPropagation();  // letters typed here are a name, not a key press
+});
 
 document.addEventListener("keydown", (event) => {
   if (event.metaKey || event.ctrlKey || event.altKey) return;
+  if (event.key === "o" && REVIEW) { el("open").focus(); event.preventDefault(); return; }
   const digit = Number(event.key);
   if (digit >= 1 && digit <= Object.keys(reasons).length) {
     const box = document.querySelectorAll("#reasons input")[digit - 1];
@@ -298,7 +324,9 @@ document.addEventListener("keydown", (event) => {
   else if (event.key === "s" || event.key === "n") onward();
 });
 
-ask(BASE + "/state").then(draw).catch((error) => say(error.message, true));
+const wanted = new URLSearchParams(location.search).get("card");
+ask(BASE + "/state").then(draw).then(() => REVIEW && wanted && open(wanted))
+  .catch((error) => say(error.message, true));
 </script>
 </body>
 </html>

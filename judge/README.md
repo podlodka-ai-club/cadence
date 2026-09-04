@@ -53,9 +53,11 @@ Ten cards take the judge about a minute and cost a few cents.
 python -m judge.report --run NAME [--base RUN] [--out FILE]
 ```
 
-On its own, a run is measured against the answers: how many verdicts agree on `accept`,
-how many on the reasons too, and every disagreement in full — the card, what the person
-said, what the filter said.
+On its own, a run is measured against the answers: how many verdicts agree, and every
+disagreement in full — the card, what the person said, what the filter said. A verdict
+agrees when both sides accept, or both refuse and every reason the filter gave is one the
+person gave too: the person ticks every reason that applies and the filter need not, but
+it must not name one the person did not see.
 
 With `--base`, two runs are set against the answers side by side, and the cards on
 which they differ are listed as *fixed* (base wrong, run right), *broken* (base right,

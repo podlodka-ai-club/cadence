@@ -3,9 +3,14 @@
     python -m judge.report --run NAME [--base RUN] [--out FILE] [--db NAME]
 
 Without `--base`, the run is measured against `answers`: how many cards both
-sides judged, how many verdicts agree on `accept`, and the disagreements in
-full — the card, what the person said, what the filter said. A card the run
-judged that has no answer is counted but not compared.
+sides judged, how many verdicts agree, and the disagreements in full — the
+card, what the person said, what the filter said. A card the run judged that
+has no answer is counted but not compared.
+
+A verdict agrees with an answer when both accept, or both refuse and every
+reason the filter gave is one the person gave too. The person ticks every
+reason that applies and the filter is not expected to; what it must not do is
+name a reason the person did not see.
 
 With `--base RUN`, two runs are measured against the answers side by side, and
 the cards on which they differ are listed as fixed (base wrong, run right),
@@ -28,6 +33,14 @@ if __package__ in (None, ""):  # run by path rather than with -m: put the repo o
 from storage import answers, verdicts
 from storage.cards import stored
 from storage.mongo import database
+
+
+def agrees(answer, verdict):
+    """Whether a verdict agrees with the answer: same `accept`, and on a
+    refusal no reason the person did not give."""
+    if answer["accept"] != verdict["accept"]:
+        return False
+    return answer["accept"] or set(verdict["reasons"]) <= set(answer["reasons"])
 
 
 def verdict_line(item):
@@ -62,11 +75,15 @@ def against_answers(db, run):
     if not said:
         return "run %s has no verdicts\n" % run
     compared = {key: (truth[key], said[key]) for key in said if key in truth}
-    agree = {key for key, (a, v) in compared.items() if a["accept"] == v["accept"]}
-    same_reasons = {key for key in agree if set(compared[key][0]["reasons"]) == set(compared[key][1]["reasons"])}
+    agree = [key for key, (a, v) in compared.items() if agrees(a, v)]
+    same_accept = [key for key, (a, v) in compared.items() if a["accept"] == v["accept"]]
     wrong_accept = [key for key, (a, v) in compared.items() if v["accept"] and not a["accept"]]
     wrong_reject = [key for key, (a, v) in compared.items() if a["accept"] and not v["accept"]]
+    wrong_reason = [key for key, (a, v) in compared.items() if a["accept"] == v["accept"] and not agrees(a, v)]
     cards = {(card.source, card.id): card for card in stored(db)}
+
+    def share(count):
+        return "%d (%.1f%%)" % (count, 100.0 * count / len(compared)) if compared else "0"
 
     out = [
         "# Run `%s` against the answers" % run,
@@ -75,14 +92,16 @@ def against_answers(db, run):
         "|---|---|",
         "| verdicts | %d |" % len(said),
         "| with an answer | %d |" % len(compared),
-        "| agree on accept | %d (%.1f%%) |" % (len(agree), 100.0 * len(agree) / len(compared) if compared else 0),
-        "| agree on reasons too | %d |" % len(same_reasons),
+        "| agree | %s |" % share(len(agree)),
+        "| agree on accept alone | %s |" % share(len(same_accept)),
         "| filter accepted, person refused | %d |" % len(wrong_accept),
         "| filter refused, person accepted | %d |" % len(wrong_reject),
+        "| filter named a reason the person did not | %d |" % len(wrong_reason),
         "",
     ]
     for title, keys in (("The filter accepted, the person refused", wrong_accept),
-                        ("The filter refused, the person accepted", wrong_reject)):
+                        ("The filter refused, the person accepted", wrong_reject),
+                        ("The filter named a reason the person did not", wrong_reason)):
         if not keys:
             continue
         out += ["## %s — %d" % (title, len(keys)), ""]
@@ -102,7 +121,7 @@ def against_base(db, run, base):
         return "runs %s and %s have no answered card in common\n" % (run, base)
 
     def right(item, key):
-        return item["accept"] == truth[key]["accept"]
+        return agrees(truth[key], item)
 
     fixed = [k for k in keys if right(said[k], k) and not right(was[k], k)]
     broken = [k for k in keys if right(was[k], k) and not right(said[k], k)]
@@ -118,7 +137,7 @@ def against_base(db, run, base):
         "| | `%s` | `%s` |" % (base, run),
         "|---|---|---|",
         "| answered cards judged by both | %d | %d |" % (len(keys), len(keys)),
-        "| agree with the person | %d (%.1f%%) | %d (%.1f%%) |" % (
+        "| agree | %d (%.1f%%) | %d (%.1f%%) |" % (
             base_right, 100.0 * base_right / len(keys), run_right, 100.0 * run_right / len(keys)),
         "",
         "| | |",

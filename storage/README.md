@@ -10,6 +10,7 @@ the rules the database enforces, and the commands that create and fill them.
 | --- | --- |
 | `cards` | one post as it stood in its source, in the shape a parser produces |
 | `answers` | the right answer about one card: was it an event, and if not, why |
+| `verdicts` | what the filter said about one card in one run |
 
 A card is addressed by `(source, externalId)`, and an answer refers to the same pair.
 Cards here are a copy taken once: an answer was given about a particular text, so
@@ -26,6 +27,11 @@ which only a refusal carries:
 | `multiple_events` | a roundup: several events, none of them the subject of the card |
 | `not_visit_worthy` | something happening in the city rather than an event to attend: a closed bridge, a jam, roadworks |
 | `unknown` | none of the listed reasons fits, or the card cannot be read with confidence |
+
+A verdict carries the same `accept` and `reasons`, plus the run it belongs to, the
+rules the filter applied and the model that judged. `live` is the run of the filter in
+production, one verdict per card; any other run name is an evaluation, kept whole so two
+can be compared. A verdict is never an answer: the answer is the person's.
 
 The list is closed: a reason outside it cannot be stored. The same words have to mean
 the same thing to everyone who writes here, so a new reason is a change to
@@ -74,3 +80,4 @@ refreshed and everything else left alone, so an answer already given survives it
 | `mongo.py` | credentials and the connection they open |
 | `setup.py` | creates the collections and brings them to the current schema |
 | `load_cards.py` | reads card files and puts them in `cards` |
+| `cards.py`, `answers.py`, `verdicts.py` | reading and writing each collection |

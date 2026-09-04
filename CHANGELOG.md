@@ -29,6 +29,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   tasks, one run of a job at a time, logging each run.
 - `scripts/sync-main.sh`: fast-forwards the checkout cron runs from, so a run
   follows the current skills rather than the ones it was cloned with.
+- `storage`: the verdicts the filter gave, kept per run.
+- `judge/`: runs the filter over cards in batches and measures a run — against
+  the answers, or against another run.
 
 ### Changed
 

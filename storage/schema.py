@@ -93,4 +93,53 @@ COLLECTIONS = {
             ],
         },
     },
+
+    # What the filter said about one card in one run. `run` names the run:
+    # `live` is the filter as it stands in production, one verdict per card,
+    # rewritten each time the card is judged; any other name is an evaluation
+    # run, kept whole so two of them can be compared. The eval set itself is
+    # `answers` — a verdict never becomes an answer without a person.
+    "verdicts": {
+        "indexes": [
+            {"keys": [("run", 1), ("source", 1), ("externalId", 1)], "name": "run_source_externalId", "unique": True},
+            {"keys": [("source", 1), ("externalId", 1)], "name": "source_externalId", "unique": False},
+        ],
+        "validator": {
+            "$and": [
+                {
+                    "$jsonSchema": {
+                        "bsonType": "object",
+                        "required": ["run", "source", "externalId", "accept", "reasons", "rules", "model", "judgedAt"],
+                        "additionalProperties": False,
+                        "properties": {
+                            "_id": {"bsonType": "objectId"},
+                            "run": {"bsonType": "string", "minLength": 1},
+                            "source": {"bsonType": "string", "pattern": SOURCE_PATTERN},
+                            "externalId": {"bsonType": "string"},
+                            "accept": {"bsonType": "bool"},
+                            "reasons": {
+                                "bsonType": "array",
+                                "uniqueItems": True,
+                                "items": {"enum": sorted(REASONS)},
+                            },
+                            # What the filter could not settle; comes only with `unknown`.
+                            "note": {"bsonType": "string"},
+                            # The rules the filter applied to reach the verdict, by their ids.
+                            "rules": {"bsonType": "array", "items": {"bsonType": "string"}},
+                            # The model that judged: a verdict is only comparable to one from the same.
+                            "model": {"bsonType": "string", "minLength": 1},
+                            "judgedAt": {"bsonType": "date"},
+                        },
+                    },
+                },
+                # The same rule as for an answer: an accepted card has nothing to explain.
+                {
+                    "$or": [
+                        {"accept": True, "reasons": {"$size": 0}},
+                        {"accept": False, "reasons": {"$not": {"$size": 0}}},
+                    ],
+                },
+            ],
+        },
+    },
 }

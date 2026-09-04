@@ -29,8 +29,9 @@ def upsert(db, cards):
     return len(result.upserted_ids), len(operations) - len(result.upserted_ids)
 
 
-def stored(db):
-    """Every card in the collection, as cards again, in a settled order."""
+def stored(db, query=None):
+    """The cards in the collection — every one, or those matching `query` — as
+    cards again, in a settled order."""
     return [
         Card(
             id=document["externalId"],
@@ -39,5 +40,5 @@ def stored(db):
             text=document["text"],
             links=tuple(document.get("links") or ()),
         )
-        for document in db.cards.find().sort([("source", 1), ("date", 1), ("externalId", 1)])
+        for document in db.cards.find(query or {}).sort([("source", 1), ("date", 1), ("externalId", 1)])
     ]

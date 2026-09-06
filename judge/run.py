@@ -34,7 +34,7 @@ working material, the rules as one JSON file beside them, and `claude -p` is
 asked to run the filter-card skill on those paths. The reply carries the
 skill's JSON block; the verdicts in it are checked against the batch — every
 card answered, every reason from the closed list, every rule one that was
-given — and written. A reply that cannot be read fails the whole batch: nothing
+given and the reason it lifts indeed gone from the card — and written. A reply that cannot be read fails the whole batch: nothing
 from it is written, and the batch is reported so a rerun picks it up.
 """
 import argparse
@@ -157,9 +157,11 @@ def ask(paths, rules_path, model):
     return envelope.get("result") or "", envelope
 
 
-def parse(reply, cards, rule_names=()):
+def parse(reply, cards, rule_reasons=None):
     """The verdicts in a reply, checked against the cards they are about and
-    the rules the judge was given."""
+    the rules the judge was given: `rule_reasons` maps a rule's name to the
+    reason it lifts."""
+    rule_reasons = rule_reasons or {}
     match = JSON_BLOCK.search(reply)
     if not match:
         raise ValueError("no JSON block in the reply")
@@ -187,9 +189,12 @@ def parse(reply, cards, rule_names=()):
         if not accept and not reasons:
             raise ValueError("%s/%s: refused without a reason" % key)
         applied = item.get("rules") or []
-        strange = [r for r in applied if r not in rule_names]
+        strange = [r for r in applied if r not in rule_reasons]
         if strange:
             raise ValueError("%s/%s: rule the judge was not given: %s" % (key + (", ".join(strange),)))
+        kept = [r for r in applied if rule_reasons[r] in reasons]
+        if kept:
+            raise ValueError("%s/%s: rule %s named as applied, but its reason is still given" % (key + (", ".join(kept),)))
         seen[key] = {
             "source": key[0], "externalId": key[1],
             "accept": accept, "reasons": [] if accept else reasons,
@@ -203,17 +208,18 @@ def parse(reply, cards, rule_names=()):
 
 
 def write_rules(workdir, chosen):
-    """The rules as one file the skill reads: name and text, nothing else.
-    Returns its path relative to the repository, or None without rules."""
+    """The rules as one file the skill reads: name, reason and text, nothing
+    else. Returns its path relative to the repository, or None without rules."""
     if not chosen:
         return None
     path = os.path.join(workdir, "rules.json")
     with open(path, "w", encoding="utf-8") as fh:
-        json.dump([{"name": r["name"], "text": r["text"]} for r in chosen], fh, ensure_ascii=False, indent=2)
+        json.dump([{"name": r["name"], "reason": r["reason"], "text": r["text"]} for r in chosen],
+                  fh, ensure_ascii=False, indent=2)
     return os.path.relpath(path, REPO)
 
 
-def judge_batch(number, cards, model, workdir, rules_path, rule_names):
+def judge_batch(number, cards, model, workdir, rules_path, rule_reasons):
     """Write one batch as files, ask the judge, return the verdicts and the cost."""
     folder = os.path.join(workdir, "batch-%03d" % number)
     os.makedirs(folder)
@@ -224,7 +230,16 @@ def judge_batch(number, cards, model, workdir, rules_path, rule_names):
             json.dump(card.to_dict(), fh, ensure_ascii=False, indent=2)
         paths.append(os.path.relpath(path, REPO))
     reply, envelope = ask(paths, rules_path, model)
-    return parse(reply, cards, rule_names), envelope.get("total_cost_usd") or 0.0
+    try:
+        found = parse(reply, cards, rule_reasons)
+    except ValueError as error:
+        # Keep the reply that could not be read, so the failure can be looked at.
+        kept = os.path.join(SCRATCH, "judge-failed", "%s-batch-%03d.txt" % (os.path.basename(workdir), number))
+        os.makedirs(os.path.dirname(kept), exist_ok=True)
+        with open(kept, "w", encoding="utf-8") as fh:
+            fh.write(reply)
+        raise ValueError("%s (reply kept in %s)" % (error, os.path.relpath(kept, REPO)))
+    return found, envelope.get("total_cost_usd") or 0.0
 
 
 # -- the run -----------------------------------------------------------------
@@ -252,6 +267,7 @@ def main(argv=None):
             except KeyError as error:
                 sys.exit(error.args[0])
             rule_names = [r["name"] for r in chosen]
+            rule_reasons = {r["name"]: r["reason"] for r in chosen}
             cards, done = select(db, args)
             report("run %s in %s: %d cards to judge, %d already judged, rules: %s" % (
                 args.run, db.name, len(cards), done, ", ".join(rule_names) or "none"))
@@ -274,7 +290,7 @@ def main(argv=None):
                 rules_path = write_rules(workdir, chosen)
                 with ThreadPoolExecutor(max_workers=args.parallel) as pool:
                     futures = {
-                        pool.submit(judge_batch, number, batch, args.model, workdir, rules_path, rule_names): (number, batch)
+                        pool.submit(judge_batch, number, batch, args.model, workdir, rules_path, rule_reasons): (number, batch)
                         for number, batch in enumerate(work, 1)
                     }
                     for future in futures:

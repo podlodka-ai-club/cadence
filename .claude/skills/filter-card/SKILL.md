@@ -22,12 +22,12 @@ Cards, in either form, one or several:
 
 With no card given, ask for one.
 
-Rules, optionally — **a path** to a JSON file holding an array of objects with `name`
-and `text`, or rules written out in the request the same way. A rule is a plain-language
-instruction that narrows or corrects the judgement below: what to do with a kind of card
-its author had in mind. The skill does not know or care where a rule stands with whoever
-wrote it; every rule it is given is in force. Given no rules, the cards are judged by
-section 1 alone.
+Rules, optionally — **a path** to a JSON file holding an array of objects with `name`,
+`reason` and `text`, or rules written out in the request the same way. A rule is of one
+form: *if the text says such-and-such, do not give this reason* — `reason` is the one it
+lifts, from the table below, and `text` says when. The skill does not know or care where
+a rule stands with whoever wrote it; every rule it is given is in force. Given no rules,
+the cards are judged by section 1 alone.
 
 ## 1. Judge the card
 
@@ -57,18 +57,19 @@ seven"* — is a date, and a venue the card names is a venue whether or not you 
 place. But nothing is supplied from outside the card: an event whose venue is only
 implied by the channel it was posted in has no venue.
 
-## 2. Apply the rules
+## 2. Lift a reason by the rules
 
-Each rule says what kind of card it is about and what the verdict should then be —
-accept, or refuse with named reasons. Go through the rules for every card: where a
-card is the kind a rule describes, the rule's verdict replaces the one from section 1,
-and the rule's `name` goes into the verdict's `rules`. A rule that does not describe
-the card leaves it alone and is not listed.
+Rules come in after the judgement, and only for a card section 1 refused. Judge every
+card first, without them. Then, for each refused card, take the rules whose `reason` is
+among the card's reasons — no other rule is consulted for it — and ask of each whether
+the card's text says what the rule's `text` describes. Where it does, lift that reason
+and put the rule's `name` into the verdict's `rules`. A card left with no reason is
+accepted.
 
-A rule can only say accept or refuse with reasons from the table; a rule that asks for
-anything else — a new reason, a field on the card — is applied as far as the table
-allows and no further. Where two rules describe the same card and disagree, the one
-given first wins, and both are listed.
+A rule lifts its own reason and nothing else. It does not add a reason, does not touch
+the other reasons the card carries, and does not reopen the judgement of section 1: a
+card that was refused for two reasons and meets a rule for one of them stays refused
+for the other. An accepted card is not looked at again.
 
 ## 3. Return the verdict
 
@@ -80,7 +81,7 @@ given, and nothing else in the reply:
   {"source": "t.me/a_channel", "externalId": "1234", "accept": true, "reasons": [], "rules": []},
   {"source": "t.me/a_channel", "externalId": "1235", "accept": false, "reasons": ["missing_time", "missing_place"], "rules": []},
   {"source": "t.me/a_channel", "externalId": "1236", "accept": false, "reasons": ["unknown"], "rules": [], "note": "a rehearsal open to anyone who asks the door — no listed reason covers a standing invitation with no occasion"},
-  {"source": "t.me/a_channel", "externalId": "1237", "accept": true, "reasons": [], "rules": ["open-daily-counts-as-timed"]}
+  {"source": "t.me/a_channel", "externalId": "1237", "accept": false, "reasons": ["missing_place"], "rules": ["open-daily-is-a-time"]}
 ]
 ```
 
@@ -89,8 +90,8 @@ given, and nothing else in the reply:
 | `source` | the card's `source`, as the file gives it |
 | `externalId` | the card's `id`, as a string |
 | `accept` | whether the card is an event worth keeping |
-| `reasons` | why it was refused; `[]` when it was accepted |
-| `rules` | the `name` of every rule that described the card; `[]` when none did or none were given |
+| `reasons` | why it was refused, after the rules; `[]` when it was accepted |
+| `rules` | the `name` of every rule that lifted a reason off the card; `[]` when none did or none were given |
 | `note` | what could not be settled; only with `unknown`, left out otherwise |
 
 A card given as text has no identity: leave `source` and `externalId` out of its object

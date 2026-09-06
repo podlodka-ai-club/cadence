@@ -15,11 +15,14 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `admin/`: a local page for answering cards by hand, one at a time.
 - `admin/`: a second page for going back over the answers already given.
 - `admin/`: a third page for confirming the filter's verdicts, one press to agree.
-- `storage/`: the `rules` collection — rules the filter is given, each draft, active or
-  rejected — and the `runs` collection recording what each run of the judge went with.
+- `storage/`: the `rules` collection — rules the filter is given, each withholding one
+  refusal reason from a kind of card, and each draft, active or rejected — and the
+  `runs` collection recording what each run of the judge went with.
 - `filter-card` skill: takes a file of rules alongside the cards and names the ones it
   applied on each verdict.
 - `judge.run`: `--rules` picks which rules the filter is given, active by default.
+- `judge.gate`: decides a draft rule, active or rejected, from a run with it against a
+  run without it.
 - `telegram_history`: builds cards from a Telegram Desktop channel export.
 - `close-session` skill: reads the session transcript and records the rules the
   person set, the corrections they made, and what subagents found as `Session`

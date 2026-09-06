@@ -35,11 +35,12 @@ rules the filter applied and the model that judged. `live` is the run of the fil
 production, one verdict per card; any other run name is an evaluation, kept whole so two
 can be compared. A verdict is never an answer: the answer is the person's.
 
-A rule is a plain-language instruction with a `name`; its consequence is accept, or
-reject with reasons from the list above. The filter reports the names of the rules it
-applied on each verdict. Where a rule stands — `draft`, `active`, `rejected` — is kept
-here with the cards it was drawn from and the numbers it was judged on; a rejected rule
-stays so that it is not proposed again.
+A rule has a `name`, one `reason` from the list above, and a `text` of one form: *if the
+text says such-and-such, do not give this reason*. The filter lifts the reason on such a
+card and reports the rule's name on the verdict. A rule only takes a reason away, never
+adds one, so rules cannot contradict each other. Where a rule stands — `draft`, `active`,
+`rejected` — is kept here with the cards it was drawn from and the numbers it was
+judged on; a rejected rule stays so that it is not proposed again.
 
 The list is closed: a reason outside it cannot be stored. The same words have to mean
 the same thing to everyone who writes here, so a new reason is a change to

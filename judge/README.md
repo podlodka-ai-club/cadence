@@ -23,10 +23,14 @@ Cards come from the `cards` collection, so put them there first. Then, from the
 repository root:
 
 ```
-python -m judge.run --run NAME [--answered] [--source S] [--from DATE] [--to DATE]
-                    [--limit N] [--batch N] [--parallel N] [--model M] [--dry-run]
+python -m judge.run --run NAME [--rules SET] [--answered] [--source S] [--from DATE]
+                    [--to DATE] [--limit N] [--batch N] [--parallel N] [--model M] [--dry-run]
 ```
 
+- `--rules` — which rules from the `rules` collection the filter is given: `active`
+  (the default), `none`, or names separated by commas. `active,NAME` is how a draft
+  is put through the gate: the active rules plus the candidate. The set is recorded
+  on the run, and a run cannot be resumed with a different one.
 - `--answered` — only cards that have an answer: the eval set.
 - `--source`, `--from`, `--to` — one source, a span of posting days (`--to` exclusive).
 - `--limit` — at most this many cards.
@@ -38,8 +42,12 @@ python -m judge.run --run NAME [--answered] [--source S] [--from DATE] [--to DAT
 Start small — one day, one channel — before a run over everything:
 
 ```
-python -m judge.run --run before --answered --source t.me/a_channel --from 2026-05-01 --to 2026-05-02
+python -m judge.run --run before --rules none --answered --source t.me/a_channel --from 2026-05-01 --to 2026-05-02
 ```
+
+The rules go to the filter as one JSON file of names and texts beside the cards; the
+filter reports on each verdict which of them it applied, and a name it was not given
+fails the batch.
 
 A card that already has a verdict in the run is skipped, so a run that stopped halfway
 is finished by running it again with the same name. A batch whose reply cannot be read
@@ -59,11 +67,11 @@ agrees when both sides accept, or both refuse and every reason the filter gave i
 person gave too: the person ticks every reason that applies and the filter need not, but
 it must not name one the person did not see.
 
-With `--base`, two runs are set against the answers side by side, and the cards on
-which they differ are listed as *fixed* (base wrong, run right), *broken* (base right,
-run wrong) or *moved* (both wrong, differently). That is how a candidate is judged: a
-better count than the base on the same answers, and nothing broken that it was not
-worth.
+Every report names the rules each run was given. With `--base`, two runs are set
+against the answers side by side, and the cards on which they differ are listed as
+*fixed* (base wrong, run right), *broken* (base right, run wrong) or *moved* (both
+wrong, differently). That is how a candidate is judged: a better count than the base on
+the same answers, and nothing broken that it was not worth.
 
 `--list` names the runs there are.
 

@@ -1,11 +1,17 @@
 """Hand cards to the filter-card skill and keep what it says about them.
 
-    python -m judge.run --run NAME [--answered] [--source S] [--from DATE] [--to DATE]
-                        [--limit N] [--batch N] [--parallel N] [--model M] [--db NAME]
-                        [--dry-run]
+    python -m judge.run --run NAME [--rules SET] [--answered] [--source S] [--from DATE]
+                        [--to DATE] [--limit N] [--batch N] [--parallel N] [--model M]
+                        [--db NAME] [--dry-run]
 
 - `--run NAME` — which run the verdicts belong to. `live` is the filter as it
   stands in production; any other name is an evaluation run.
+- `--rules SET` — which rules the filter is given, from the `rules`
+  collection: `active` (the default) for every active rule, `none` for a run
+  without rules, or a comma-separated list of names; `active,NAME` adds a
+  candidate to the active ones — how a draft is put through the gate. The
+  set is recorded on the run, and a run resumed with a different set is
+  refused.
 - `--answered` — only cards that have an answer in `answers`: the eval set.
 - `--source`, `--from`, `--to` — narrow the cards to one source and a span of
   posting dates (`YYYY-MM-DD`; `--to` is exclusive). Start small: one day, one
@@ -24,10 +30,11 @@ this run is skipped, so a run that stopped halfway is finished by running it
 again with the same name.
 
 Each batch is written as card files into a temporary directory under the
-working material, and `claude -p` is asked to run the filter-card skill on
-those paths. The reply carries the skill's JSON block; the verdicts in it are
-checked against the batch — every card answered, every reason from the closed
-list — and written. A reply that cannot be read fails the whole batch: nothing
+working material, the rules as one JSON file beside them, and `claude -p` is
+asked to run the filter-card skill on those paths. The reply carries the
+skill's JSON block; the verdicts in it are checked against the batch — every
+card answered, every reason from the closed list, every rule one that was
+given — and written. A reply that cannot be read fails the whole batch: nothing
 from it is written, and the batch is reported so a rerun picks it up.
 """
 import argparse
@@ -45,7 +52,7 @@ from pymongo.errors import PyMongoError
 if __package__ in (None, ""):  # run by path rather than with -m: put the repo on the path
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from storage import answers, verdicts
+from storage import answers, rules, runs, verdicts
 from storage.cards import stored
 from storage.mongo import database
 from storage.schema import REASONS
@@ -100,19 +107,41 @@ def batches(cards, size):
     return [cards[i:i + size] for i in range(0, len(cards), size)]
 
 
+# -- which rules -------------------------------------------------------------
+
+def rule_set(db, spec):
+    """The rules `--rules` asks for, as stored. `active`, `none`, or names;
+    `active` among the names stands for every active rule."""
+    chosen = []
+    for part in [p.strip() for p in spec.split(",") if p.strip()]:
+        if part == "none":
+            continue
+        if part == "active":
+            chosen.extend(rules.with_status(db, "active"))
+        else:
+            chosen.extend(rules.named(db, [part]))
+    seen = set()
+    unique = []
+    for rule in chosen:
+        if rule["name"] not in seen:
+            seen.add(rule["name"])
+            unique.append(rule)
+    return unique
+
+
 # -- one batch through the judge ---------------------------------------------
 
-def prompt_for(paths):
-    return (
-        "Run the filter-card skill on these card files and return its verdict:\n"
-        + "\n".join(paths)
-    )
+def prompt_for(paths, rules_path):
+    lines = ["Run the filter-card skill on these card files and return its verdict:"] + list(paths)
+    if rules_path:
+        lines.append("Judge by the rules in this file as well: %s" % rules_path)
+    return "\n".join(lines)
 
 
-def ask(paths, model):
+def ask(paths, rules_path, model):
     """One call to the judge. Returns the text of its reply."""
     command = [
-        "claude", "-p", prompt_for(paths),
+        "claude", "-p", prompt_for(paths, rules_path),
         "--model", model,
         "--output-format", "json",
         "--allowedTools", "Read",
@@ -128,8 +157,9 @@ def ask(paths, model):
     return envelope.get("result") or "", envelope
 
 
-def parse(reply, cards):
-    """The verdicts in a reply, checked against the cards they are about."""
+def parse(reply, cards, rule_names=()):
+    """The verdicts in a reply, checked against the cards they are about and
+    the rules the judge was given."""
     match = JSON_BLOCK.search(reply)
     if not match:
         raise ValueError("no JSON block in the reply")
@@ -156,11 +186,15 @@ def parse(reply, cards):
             raise ValueError("%s/%s: reason outside the list: %s" % (key + (", ".join(unknown),)))
         if not accept and not reasons:
             raise ValueError("%s/%s: refused without a reason" % key)
+        applied = item.get("rules") or []
+        strange = [r for r in applied if r not in rule_names]
+        if strange:
+            raise ValueError("%s/%s: rule the judge was not given: %s" % (key + (", ".join(strange),)))
         seen[key] = {
             "source": key[0], "externalId": key[1],
             "accept": accept, "reasons": [] if accept else reasons,
             "note": item.get("note") or None,
-            "rules": item.get("rules") or [],
+            "rules": applied,
         }
     missing = [key for key in expected if key not in seen]
     if missing:
@@ -168,7 +202,18 @@ def parse(reply, cards):
     return list(seen.values())
 
 
-def judge_batch(number, cards, model, workdir):
+def write_rules(workdir, chosen):
+    """The rules as one file the skill reads: name and text, nothing else.
+    Returns its path relative to the repository, or None without rules."""
+    if not chosen:
+        return None
+    path = os.path.join(workdir, "rules.json")
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump([{"name": r["name"], "text": r["text"]} for r in chosen], fh, ensure_ascii=False, indent=2)
+    return os.path.relpath(path, REPO)
+
+
+def judge_batch(number, cards, model, workdir, rules_path, rule_names):
     """Write one batch as files, ask the judge, return the verdicts and the cost."""
     folder = os.path.join(workdir, "batch-%03d" % number)
     os.makedirs(folder)
@@ -178,8 +223,8 @@ def judge_batch(number, cards, model, workdir):
         with open(path, "w", encoding="utf-8") as fh:
             json.dump(card.to_dict(), fh, ensure_ascii=False, indent=2)
         paths.append(os.path.relpath(path, REPO))
-    reply, envelope = ask(paths, model)
-    return parse(reply, cards), envelope.get("total_cost_usd") or 0.0
+    reply, envelope = ask(paths, rules_path, model)
+    return parse(reply, cards, rule_names), envelope.get("total_cost_usd") or 0.0
 
 
 # -- the run -----------------------------------------------------------------
@@ -187,6 +232,7 @@ def judge_batch(number, cards, model, workdir):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--run", required=True, help="which run the verdicts belong to; `live` is production")
+    parser.add_argument("--rules", default="active", help="rules to judge by: active, none, or names (default: active)")
     parser.add_argument("--answered", action="store_true", help="only cards that have an answer: the eval set")
     parser.add_argument("--source", default=None, help="only cards of this source")
     parser.add_argument("--from", dest="since", type=day, default=None, help="posted on or after this day (YYYY-MM-DD)")
@@ -201,13 +247,23 @@ def main(argv=None):
 
     try:
         with database(args.db) as db:
+            try:
+                chosen = rule_set(db, args.rules)
+            except KeyError as error:
+                sys.exit(error.args[0])
+            rule_names = [r["name"] for r in chosen]
             cards, done = select(db, args)
-            report("run %s in %s: %d cards to judge, %d already judged" % (args.run, db.name, len(cards), done))
+            report("run %s in %s: %d cards to judge, %d already judged, rules: %s" % (
+                args.run, db.name, len(cards), done, ", ".join(rule_names) or "none"))
             for source in sorted({card.source for card in cards}):
                 own = [card for card in cards if card.source == source]
                 report("  %-28s %4d cards  %s .. %s" % (source, len(own), own[0].day, own[-1].day))
             if args.dry_run or not cards:
                 return
+            try:
+                runs.begin(db, args.run, args.model, rule_names)
+            except ValueError as error:
+                sys.exit(str(error))
 
             work = batches(cards, args.batch)
             started = datetime.now(timezone.utc)
@@ -215,9 +271,10 @@ def main(argv=None):
             cost = 0.0
             os.makedirs(SCRATCH, exist_ok=True)
             with tempfile.TemporaryDirectory(prefix="judge-", dir=SCRATCH) as workdir:
+                rules_path = write_rules(workdir, chosen)
                 with ThreadPoolExecutor(max_workers=args.parallel) as pool:
                     futures = {
-                        pool.submit(judge_batch, number, batch, args.model, workdir): (number, batch)
+                        pool.submit(judge_batch, number, batch, args.model, workdir, rules_path, rule_names): (number, batch)
                         for number, batch in enumerate(work, 1)
                     }
                     for future in futures:

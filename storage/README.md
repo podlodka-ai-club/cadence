@@ -11,6 +11,8 @@ the rules the database enforces, and the commands that create and fill them.
 | `cards` | one post as it stood in its source, in the shape a parser produces |
 | `answers` | the right answer about one card: was it an event, and if not, why |
 | `verdicts` | what the filter said about one card in one run |
+| `rules` | a rule the filter can be given, and where it stands: draft, active or rejected |
+| `runs` | what produced a run's verdicts: the rules the filter was given and the model |
 
 A card is addressed by `(source, externalId)`, and an answer refers to the same pair.
 Cards here are a copy taken once: an answer was given about a particular text, so
@@ -32,6 +34,12 @@ A verdict carries the same `accept` and `reasons`, plus the run it belongs to, t
 rules the filter applied and the model that judged. `live` is the run of the filter in
 production, one verdict per card; any other run name is an evaluation, kept whole so two
 can be compared. A verdict is never an answer: the answer is the person's.
+
+A rule is a plain-language instruction with a `name`; its consequence is accept, or
+reject with reasons from the list above. The filter reports the names of the rules it
+applied on each verdict. Where a rule stands — `draft`, `active`, `rejected` — is kept
+here with the cards it was drawn from and the numbers it was judged on; a rejected rule
+stays so that it is not proposed again.
 
 The list is closed: a reason outside it cannot be stored. The same words have to mean
 the same thing to everyone who writes here, so a new reason is a change to
@@ -80,4 +88,4 @@ refreshed and everything else left alone, so an answer already given survives it
 | `mongo.py` | credentials and the connection they open |
 | `setup.py` | creates the collections and brings them to the current schema |
 | `load_cards.py` | reads card files and puts them in `cards` |
-| `cards.py`, `answers.py`, `verdicts.py` | reading and writing each collection |
+| `cards.py`, `answers.py`, `verdicts.py`, `rules.py`, `runs.py` | reading and writing each collection |

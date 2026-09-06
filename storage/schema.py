@@ -22,6 +22,11 @@ REASONS = {
     "unknown": "none of the listed reasons fits, or the card cannot be read with confidence",
 }
 
+# Where a rule stands. `draft` was proposed and not yet judged; `active` passed
+# the gate and the filter is given it; `rejected` failed the gate and is kept so
+# that it is not proposed again.
+RULE_STATUSES = ("draft", "active", "rejected")
+
 # A source name is a path-safe name of where the post came from: `t.me/a_channel`.
 # Segments of word characters joined by `/`, and no `.` or `..` segment that
 # could walk out of a directory built from it — the same rule `parsers.card`
@@ -140,6 +145,85 @@ COLLECTIONS = {
                     ],
                 },
             ],
+        },
+    },
+
+    # A rule the filter is given alongside the cards: a plain-language
+    # instruction whose consequence is accept, or reject with reasons from the
+    # closed list. `name` is how a verdict refers to it. `cards` are the cards
+    # it was drawn from, `gate` the numbers it was judged on.
+    "rules": {
+        "indexes": [
+            {"keys": [("name", 1)], "name": "name", "unique": True},
+            {"keys": [("status", 1)], "name": "status", "unique": False},
+        ],
+        "validator": {
+            "$jsonSchema": {
+                "bsonType": "object",
+                "required": ["name", "text", "status", "cards", "proposedAt"],
+                "additionalProperties": False,
+                "properties": {
+                    "_id": {"bsonType": "objectId"},
+                    "name": {"bsonType": "string", "pattern": r"^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+                    "text": {"bsonType": "string", "minLength": 1},
+                    "status": {"enum": list(RULE_STATUSES)},
+                    "cards": {
+                        "bsonType": "array",
+                        "items": {
+                            "bsonType": "object",
+                            "required": ["source", "externalId"],
+                            "additionalProperties": False,
+                            "properties": {
+                                "source": {"bsonType": "string", "pattern": SOURCE_PATTERN},
+                                "externalId": {"bsonType": "string"},
+                            },
+                        },
+                    },
+                    "proposedAt": {"bsonType": "date"},
+                    # Where the rule came from: the run whose disagreements it was drawn from, or a note.
+                    "proposedFrom": {"bsonType": "string"},
+                    "decidedAt": {"bsonType": "date"},
+                    # What the gate saw: the candidate run, the base run, agreement before and after.
+                    "gate": {
+                        "bsonType": "object",
+                        "required": ["run", "base", "agreeBefore", "agreeAfter", "of"],
+                        "additionalProperties": False,
+                        "properties": {
+                            "run": {"bsonType": "string", "minLength": 1},
+                            "base": {"bsonType": "string", "minLength": 1},
+                            "agreeBefore": {"bsonType": "int"},
+                            "agreeAfter": {"bsonType": "int"},
+                            "of": {"bsonType": "int"},
+                            "fixed": {"bsonType": "int"},
+                            "broken": {"bsonType": "int"},
+                        },
+                    },
+                },
+            },
+        },
+    },
+
+    # One run of the judge: which rules it was given and which model judged,
+    # so that its verdicts can be read back knowing what produced them.
+    "runs": {
+        "indexes": [
+            {"keys": [("run", 1)], "name": "run", "unique": True},
+        ],
+        "validator": {
+            "$jsonSchema": {
+                "bsonType": "object",
+                "required": ["run", "model", "rules", "startedAt", "lastAt"],
+                "additionalProperties": False,
+                "properties": {
+                    "_id": {"bsonType": "objectId"},
+                    "run": {"bsonType": "string", "minLength": 1},
+                    "model": {"bsonType": "string", "minLength": 1},
+                    # The rules the filter was given, by name; empty for a run without rules.
+                    "rules": {"bsonType": "array", "items": {"bsonType": "string"}},
+                    "startedAt": {"bsonType": "date"},
+                    "lastAt": {"bsonType": "date"},
+                },
+            },
         },
     },
 }

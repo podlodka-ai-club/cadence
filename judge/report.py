@@ -30,7 +30,7 @@ from pymongo.errors import PyMongoError
 if __package__ in (None, ""):  # run by path rather than with -m: put the repo on the path
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from storage import answers, verdicts
+from storage import answers, runs, verdicts
 from storage.cards import stored
 from storage.mongo import database
 
@@ -68,6 +68,14 @@ def card_block(card, rows):
     return "\n".join(out)
 
 
+def rules_line(db, run):
+    """`none`, or the names of the rules the run was given, from its record."""
+    record = runs.described(db, run)
+    if record is None:
+        return "unrecorded"
+    return ", ".join("`%s`" % name for name in record["rules"]) or "none"
+
+
 def against_answers(db, run):
     """The run measured against the answers. Returns the report text."""
     said = verdicts.given(db, run)
@@ -90,6 +98,7 @@ def against_answers(db, run):
         "",
         "| | |",
         "|---|---|",
+        "| rules | %s |" % rules_line(db, run),
         "| verdicts | %d |" % len(said),
         "| with an answer | %d |" % len(compared),
         "| agree | %s |" % share(len(agree)),
@@ -136,6 +145,7 @@ def against_base(db, run, base):
         "",
         "| | `%s` | `%s` |" % (base, run),
         "|---|---|---|",
+        "| rules | %s | %s |" % (rules_line(db, base), rules_line(db, run)),
         "| answered cards judged by both | %d | %d |" % (len(keys), len(keys)),
         "| agree | %d (%.1f%%) | %d (%.1f%%) |" % (
             base_right, 100.0 * base_right / len(keys), run_right, 100.0 * run_right / len(keys)),

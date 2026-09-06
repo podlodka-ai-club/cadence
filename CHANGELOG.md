@@ -7,6 +7,13 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
 
+### Known issues
+
+- `retrospective` skill: its draft-rule outcome still writes to the `Filter Rules`
+  xmemory instance, which the filter no longer reads — filter rules live in the
+  `rules` collection now. A rule the retrospective drafts goes nowhere until the skill
+  is redirected.
+
 ### Added
 
 - `parsers/`: parsers that read different sources of posts and build cards.
@@ -14,15 +21,6 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   them — with the commands that create the database and fill it.
 - `admin/`: a local page for answering cards by hand, one at a time.
 - `admin/`: a second page for going back over the answers already given.
-- `admin/`: a third page for confirming the filter's verdicts, one press to agree.
-- `storage/`: the `rules` collection — rules the filter is given, each withholding one
-  refusal reason from a kind of card, and each draft, active or rejected — and the
-  `runs` collection recording what each run of the judge went with.
-- `filter-card` skill: takes a file of rules alongside the cards and names the ones it
-  applied on each verdict.
-- `judge.run`: `--rules` picks which rules the filter is given, active by default.
-- `judge.gate`: decides a draft rule, active or rejected, from a run with it against a
-  run without it.
 - `telegram_history`: builds cards from a Telegram Desktop channel export.
 - `close-session` skill: reads the session transcript and records the rules the
   person set, the corrections they made, and what subagents found as `Session`
@@ -41,6 +39,15 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `storage`: the verdicts the filter gave, kept per run.
 - `judge/`: runs the filter over cards in batches and measures a run — against
   the answers, or against another run.
+- `admin/`: a third page for confirming the filter's verdicts, one press to agree.
+- `storage/`: the `rules` collection — rules the filter is given, each withholding one
+  refusal reason from a kind of card, and each draft, active or rejected — and the
+  `runs` collection recording what each run of the judge went with.
+- `filter-card` skill: takes a file of rules alongside the cards and names the ones it
+  applied on each verdict.
+- `judge.run`: `--rules` picks which rules the filter is given, active by default.
+- `judge.gate`: decides a draft rule, active or rejected, from a run with it against a
+  run without it.
 
 ### Changed
 

@@ -1,6 +1,6 @@
 ---
 name: filter-card
-description: Decide whether a card is an event worth keeping, and return the verdict — accepted, or refused with reasons from a closed list. Use when asked to filter, triage or sort cards, to judge whether posts are events, or when the user runs /filter-card. Takes cards as paths to card JSON files, or as text pasted as it stands.
+description: Decide whether a card is an event worth keeping, and return the verdict — accepted, or refused with reasons from a closed list. Use when asked to filter, triage or sort cards, to judge whether posts are events, or when the user runs /filter-card. Takes cards as paths to card JSON files, or as text pasted as it stands, and optionally a file of rules to judge by.
 ---
 
 # filter-card
@@ -8,8 +8,8 @@ description: Decide whether a card is an event worth keeping, and return the ver
 A card is one post as it stood in its source. This skill answers one question about it —
 **is this an event a person could go to?** — and returns the answer as JSON.
 
-It writes nothing anywhere, reads nothing but the cards it was given, and changes no file
-in the tree. The answer is what the caller does something with.
+It writes nothing anywhere, reads nothing but the cards and the rules it was given, and
+changes no file in the tree. The answer is what the caller does something with.
 
 ## Arguments
 
@@ -21,6 +21,13 @@ Cards, in either form, one or several:
   date, and the text is judged on its own.
 
 With no card given, ask for one.
+
+Rules, optionally — **a path** to a JSON file holding an array of objects with `name`
+and `text`, or rules written out in the request the same way. A rule is a plain-language
+instruction that narrows or corrects the judgement below: what to do with a kind of card
+its author had in mind. The skill does not know or care where a rule stands with whoever
+wrote it; every rule it is given is in force. Given no rules, the cards are judged by
+section 1 alone.
 
 ## 1. Judge the card
 
@@ -50,16 +57,30 @@ seven"* — is a date, and a venue the card names is a venue whether or not you 
 place. But nothing is supplied from outside the card: an event whose venue is only
 implied by the channel it was posted in has no venue.
 
-## 2. Return the verdict
+## 2. Apply the rules
+
+Each rule says what kind of card it is about and what the verdict should then be —
+accept, or refuse with named reasons. Go through the rules for every card: where a
+card is the kind a rule describes, the rule's verdict replaces the one from section 1,
+and the rule's `name` goes into the verdict's `rules`. A rule that does not describe
+the card leaves it alone and is not listed.
+
+A rule can only say accept or refuse with reasons from the table; a rule that asks for
+anything else — a new reason, a field on the card — is applied as far as the table
+allows and no further. Where two rules describe the same card and disagree, the one
+given first wins, and both are listed.
+
+## 3. Return the verdict
 
 One JSON array, in a fenced `json` block, one object per card in the order the cards were
 given, and nothing else in the reply:
 
 ```json
 [
-  {"source": "t.me/a_channel", "externalId": "1234", "accept": true, "reasons": []},
-  {"source": "t.me/a_channel", "externalId": "1235", "accept": false, "reasons": ["missing_time", "missing_place"]},
-  {"source": "t.me/a_channel", "externalId": "1236", "accept": false, "reasons": ["unknown"], "note": "a rehearsal open to anyone who asks the door — no listed reason covers a standing invitation with no occasion"}
+  {"source": "t.me/a_channel", "externalId": "1234", "accept": true, "reasons": [], "rules": []},
+  {"source": "t.me/a_channel", "externalId": "1235", "accept": false, "reasons": ["missing_time", "missing_place"], "rules": []},
+  {"source": "t.me/a_channel", "externalId": "1236", "accept": false, "reasons": ["unknown"], "rules": [], "note": "a rehearsal open to anyone who asks the door — no listed reason covers a standing invitation with no occasion"},
+  {"source": "t.me/a_channel", "externalId": "1237", "accept": true, "reasons": [], "rules": ["open-daily-counts-as-timed"]}
 ]
 ```
 
@@ -69,6 +90,7 @@ given, and nothing else in the reply:
 | `externalId` | the card's `id`, as a string |
 | `accept` | whether the card is an event worth keeping |
 | `reasons` | why it was refused; `[]` when it was accepted |
+| `rules` | the `name` of every rule that described the card; `[]` when none did or none were given |
 | `note` | what could not be settled; only with `unknown`, left out otherwise |
 
 A card given as text has no identity: leave `source` and `externalId` out of its object

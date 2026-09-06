@@ -1,20 +1,23 @@
 """The rules the filter is given, and where each of them stands.
 
-A rule is a plain-language instruction with a name. The filter is handed the
-text and reports the name back on every verdict the rule reached; nothing here
-decides which rules a run gets — the caller does, by status or by name.
+A rule is bound to one reason and describes the kind of card that reason is
+wrongly given to; the filter withholds the reason on such a card and reports
+the rule's name on the verdict. Nothing here decides which rules a run gets —
+the caller does, by status or by name.
 """
 from datetime import datetime, timezone
 
-from storage.schema import RULE_STATUSES
+from storage.schema import REASONS, RULE_STATUSES
 
 
-def add(db, name, text, cards=(), proposed_from=None, status="draft"):
-    """Write one rule. A second write under the same name replaces the text,
-    the cards and the origin, and leaves the status and the gate alone."""
+def add(db, name, reason, text, cards=(), proposed_from=None, status="draft"):
+    """Write one rule. A second write under the same name replaces the reason,
+    the text, the cards and the origin, and leaves the status and the gate alone."""
     if status not in RULE_STATUSES:
         raise ValueError("no such status: %s" % status)
-    fields = {"text": text, "cards": [{"source": s, "externalId": str(e)} for s, e in cards]}
+    if reason not in REASONS or reason == "unknown":
+        raise ValueError("not a reason a rule can withhold: %s" % reason)
+    fields = {"reason": reason, "text": text, "cards": [{"source": s, "externalId": str(e)} for s, e in cards]}
     if proposed_from:
         fields["proposedFrom"] = proposed_from
     db.rules.update_one(

@@ -120,14 +120,15 @@ def against_answers(db, run):
     return "\n".join(out)
 
 
-def against_base(db, run, base):
-    """Two runs measured against the answers side by side. Returns the report text."""
+def compare(db, run, base):
+    """Two runs against the answers on the cards both judged. Returns the
+    counts and the cards behind them, or None when they share no answered card."""
     truth = answers.given(db)
     said = verdicts.given(db, run)
     was = verdicts.given(db, base)
     keys = [key for key in truth if key in said and key in was]
     if not keys:
-        return "runs %s and %s have no answered card in common\n" % (run, base)
+        return None
 
     def right(item, key):
         return agrees(truth[key], item)
@@ -136,8 +137,24 @@ def against_base(db, run, base):
     broken = [k for k in keys if right(was[k], k) and not right(said[k], k)]
     moved = [k for k in keys if not right(said[k], k) and not right(was[k], k)
              and (said[k]["accept"], set(said[k]["reasons"])) != (was[k]["accept"], set(was[k]["reasons"]))]
-    base_right = sum(1 for k in keys if right(was[k], k))
-    run_right = sum(1 for k in keys if right(said[k], k))
+    # Broken on `accept` itself, not only on a reason: the kind of harm no reason fixed is worth.
+    broken_accept = [k for k in broken if said[k]["accept"] != truth[k]["accept"]]
+    return {
+        "keys": keys, "truth": truth, "said": said, "was": was,
+        "fixed": fixed, "broken": broken, "moved": moved, "broken_accept": broken_accept,
+        "base_right": sum(1 for k in keys if right(was[k], k)),
+        "run_right": sum(1 for k in keys if right(said[k], k)),
+    }
+
+
+def against_base(db, run, base):
+    """Two runs measured against the answers side by side. Returns the report text."""
+    found = compare(db, run, base)
+    if found is None:
+        return "runs %s and %s have no answered card in common\n" % (run, base)
+    keys, truth, said, was = found["keys"], found["truth"], found["said"], found["was"]
+    fixed, broken, moved = found["fixed"], found["broken"], found["moved"]
+    base_right, run_right = found["base_right"], found["run_right"]
     cards = {(card.source, card.id): card for card in stored(db)}
 
     out = [
@@ -154,6 +171,7 @@ def against_base(db, run, base):
         "|---|---|",
         "| fixed — base wrong, run right | %d |" % len(fixed),
         "| broken — base right, run wrong | %d |" % len(broken),
+        "| of them on accept itself | %d |" % len(found["broken_accept"]),
         "| moved — both wrong, differently | %d |" % len(moved),
         "| net | %+d |" % (len(fixed) - len(broken)),
         "",

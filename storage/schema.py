@@ -148,10 +148,13 @@ COLLECTIONS = {
         },
     },
 
-    # A rule the filter is given alongside the cards: a plain-language
-    # instruction whose consequence is accept, or reject with reasons from the
-    # closed list. `name` is how a verdict refers to it. `cards` are the cards
-    # it was drawn from, `gate` the numbers it was judged on.
+    # A rule the filter is given alongside the cards. Each is bound to one
+    # reason from the closed list and is of one form — if the text says
+    # such-and-such, do not give this reason: where the text does, the filter
+    # lifts the reason. A rule can only take a reason away, never
+    # add one, so two rules cannot contradict each other. `name` is how a
+    # verdict refers to it, `cards` are the cards it was drawn from, `gate`
+    # the numbers it was judged on.
     "rules": {
         "indexes": [
             {"keys": [("name", 1)], "name": "name", "unique": True},
@@ -160,11 +163,14 @@ COLLECTIONS = {
         "validator": {
             "$jsonSchema": {
                 "bsonType": "object",
-                "required": ["name", "text", "status", "cards", "proposedAt"],
+                "required": ["name", "reason", "text", "status", "cards", "proposedAt"],
                 "additionalProperties": False,
                 "properties": {
                     "_id": {"bsonType": "objectId"},
                     "name": {"bsonType": "string", "pattern": r"^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+                    # The reason the rule withholds. `unknown` is not a reason a rule corrects.
+                    "reason": {"enum": sorted(set(REASONS) - {"unknown"})},
+                    # When the reason is lifted: "if the text says …, do not give <reason>".
                     "text": {"bsonType": "string", "minLength": 1},
                     "status": {"enum": list(RULE_STATUSES)},
                     "cards": {
@@ -183,19 +189,23 @@ COLLECTIONS = {
                     # Where the rule came from: the run whose disagreements it was drawn from, or a note.
                     "proposedFrom": {"bsonType": "string"},
                     "decidedAt": {"bsonType": "date"},
-                    # What the gate saw: the candidate run, the base run, agreement before and after.
+                    # What the gate saw: the candidate run against the base run over `of`
+                    # answered cards — agreement before and after on the whole set, and on
+                    # the `fired` cards the rule described, how many it fixed and broke.
                     "gate": {
                         "bsonType": "object",
-                        "required": ["run", "base", "agreeBefore", "agreeAfter", "of"],
+                        "required": ["run", "base", "of", "agreeBefore", "agreeAfter", "fired", "fixed", "broken"],
                         "additionalProperties": False,
                         "properties": {
                             "run": {"bsonType": "string", "minLength": 1},
                             "base": {"bsonType": "string", "minLength": 1},
+                            "of": {"bsonType": "int"},
                             "agreeBefore": {"bsonType": "int"},
                             "agreeAfter": {"bsonType": "int"},
-                            "of": {"bsonType": "int"},
+                            "fired": {"bsonType": "int"},
                             "fixed": {"bsonType": "int"},
                             "broken": {"bsonType": "int"},
+                            "brokenOnAccept": {"bsonType": "int"},
                         },
                     },
                 },

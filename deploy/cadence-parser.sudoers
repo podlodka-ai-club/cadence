@@ -1,0 +1,7 @@
+# The one right `ship.sh` needs, and nothing besides it: restarting the parser
+# once a new version is in the checkout.
+#
+# Two things have to match the machine. The account is the one `User=` names in
+# cadence-parser.service, and the path is where `command -v systemctl` says
+# systemctl is — sudoers compares the path literally, not the command name.
+cadence ALL=(root) NOPASSWD: /usr/bin/systemctl restart cadence-parser

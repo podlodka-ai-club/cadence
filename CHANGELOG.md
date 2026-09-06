@@ -55,6 +55,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - a sink that puts the cards a parser built into the database.
 - `deploy/`: the service the online parser runs under, and the script that ships
   a new version to a machine already running it.
+- `deploy/`: the sudoers rule letting the parser's account restart its own service.
 
 ### Changed
 

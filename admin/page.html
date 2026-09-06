@@ -74,8 +74,9 @@
     max-height: 52vh;
     overflow-y: auto;
   }
-  .other { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
-  .other:hover { color: var(--ink); }
+  nav a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); margin-left: 12px; }
+  nav a:hover { color: var(--ink); }
+  nav a.here { color: var(--ink); border-bottom-color: var(--ink); }
   .previous {
     margin: 12px 2px 0;
     font-size: 13px;
@@ -147,7 +148,7 @@
     <span class="where" id="where"></span>
     <span class="counts" id="counts"></span>
     <input id="open" placeholder="open t.me/a_channel/1234" hidden>
-    <a class="other" id="other" href="/review"></a>
+    <nav><a href="/">answer</a><a href="/review">review</a><a href="/confirm">confirm</a></nav>
   </header>
 
   <div id="work" hidden>
@@ -176,11 +177,15 @@
 </main>
 
 <script>
-// The same page serves both walks: answering cards that have none, and going
-// back over answers already given. Which one it is, the address says.
-const REVIEW = location.pathname.startsWith("/review");
-const BASE = REVIEW ? "/review" : "";
-const MOVE_ON = REVIEW ? "/review/next" : "/skip";
+// The same page serves three walks: answering cards that have none, going back
+// over answers already given, and confirming the filter's verdicts. Which one
+// it is, the address says. The last two walk the same way: a suggestion is
+// shown, moving on keeps it, and any card can be stepped back to or opened.
+const MODE = location.pathname.startsWith("/review") ? "review"
+           : location.pathname.startsWith("/confirm") ? "confirm" : "answer";
+const REVIEW = MODE !== "answer";
+const BASE = MODE === "answer" ? "" : "/" + MODE;
+const MOVE_ON = MODE === "answer" ? "/skip" : BASE + "/next";
 
 const el = (id) => document.getElementById(id);
 let card = null;
@@ -220,9 +225,9 @@ function refresh() {
 }
 
 function counts(p) {
-  return REVIEW
-    ? `<b>${p.seen}</b> looked at · <b>${p.left}</b> left of ${p.total}`
-    : `<b>${p.answered}</b> answered · ${p.skipped} skipped · <b>${p.left}</b> left of ${p.total}`;
+  if (MODE === "review") return `<b>${p.seen}</b> looked at · <b>${p.left}</b> left of ${p.total}`;
+  if (MODE === "confirm") return `<b>${p.seen}</b> confirmed · <b>${p.left}</b> left of ${p.total}`;
+  return `<b>${p.answered}</b> answered · ${p.skipped} skipped · <b>${p.left}</b> left of ${p.total}`;
 }
 
 function draw(state) {
@@ -241,11 +246,14 @@ function draw(state) {
   el("links").innerHTML = card.links
     .map((url) => `<a href="${url}" target="_blank" rel="noreferrer">${url}</a>`).join("");
 
-  // Going back over an answer starts from the answer: the reasons are already
-  // ticked, so changing one's mind is a tick away rather than a fresh decision.
+  // Going back over an answer starts from the answer, and confirming a verdict
+  // starts from the verdict: the reasons are already ticked, so changing one's
+  // mind is a tick away rather than a fresh decision.
   const answer = state.answer;
+  const who = MODE === "confirm" ? "filter" : "answered";
   el("previous").textContent = answer
-    ? (answer.accept ? "answered: accept" : "answered: reject — " + answer.reasons.join(", "))
+    ? (answer.accept ? who + ": accept" : who + ": reject — " + answer.reasons.join(", ")
+       + (answer.note ? " (" + answer.note + ")" : ""))
     : "";
   document.querySelectorAll("#reasons input").forEach((box) => {
     box.checked = !!answer && answer.reasons.includes(box.value);
@@ -278,13 +286,13 @@ const reject = () => ticked().length ? send(BASE + "/answer", {accept: false, re
 const onward = () => send(MOVE_ON, {});
 // Stepping back decides nothing, so it does not name a card and works at the
 // end of the walk too — which is where a misplaced press gets noticed.
-const back = () => REVIEW && ask("/review/back", {}).then(draw).catch((e) => say(e.message, true));
+const back = () => REVIEW && ask(BASE + "/back", {}).then(draw).catch((e) => say(e.message, true));
 // Opening a card by name: `t.me/a_channel/1234` — the source is everything up to
 // the last slash. Typed into the box, or given as `?card=` in the address.
 function open(name) {
   const cut = (name || "").trim().lastIndexOf("/");
   if (cut < 1) return say("name a card as source/id", true);
-  return ask("/review/open", {source: name.slice(0, cut), externalId: name.slice(cut + 1)})
+  return ask(BASE + "/open", {source: name.slice(0, cut), externalId: name.slice(cut + 1)})
     .then(draw).catch((e) => say(e.message, true));
 }
 
@@ -293,9 +301,9 @@ el("reject").onclick = reject;
 el("skip").onclick = onward;
 
 el("skip").innerHTML = REVIEW ? "next <kbd>n</kbd>" : "skip <kbd>s</kbd>";
-el("other").textContent = REVIEW ? "← answering" : "review answers →";
-el("other").href = REVIEW ? "/" : "/review";
-el("doneWord").textContent = REVIEW ? "That is every answer." : "Nothing left to answer.";
+document.querySelector(`nav a[href="${BASE || "/"}"]`).className = "here";
+el("doneWord").textContent = MODE === "review" ? "That is every answer."
+                           : MODE === "confirm" ? "Nothing left to confirm." : "Nothing left to answer.";
 el("prev").hidden = !REVIEW;
 el("prevDone").hidden = !REVIEW;
 el("prev").onclick = back;

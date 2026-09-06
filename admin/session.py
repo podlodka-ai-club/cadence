@@ -1,9 +1,11 @@
 """The cards being worked through, and what a decision does to them.
 
-Two walks, and they are not the same walk. `Session` goes through cards that
+Three walks, and they are not the same walk. `Session` goes through cards that
 have no answer yet and stops when they run out. `Review` goes back over the
 answers already given, so every card it shows has one, and moving on changes
-nothing by itself.
+nothing by itself. `Confirm` goes through cards the filter has judged and the
+person has not: the filter's verdict is shown as the suggestion, and moving on
+takes it as the answer.
 
 One run works through a fixed list of cards, read once at startup. A card the
 database already has an answer about is not shown again — restarting picks up
@@ -121,3 +123,26 @@ class Review:
         is noticed.
         """
         self.at = max(0, self.at - 1)
+
+
+class Confirm(Review):
+    """A walk over the filter's verdicts that have no answer yet.
+
+    The same walk as `Review`, except where the suggestion comes from: the
+    filter's verdict stands where the answer would, so agreeing is a press of
+    `next` and disagreeing is a tick and a press. Either way an answer is
+    written — a verdict never becomes one on its own, and the person going
+    past it is what makes it theirs.
+    """
+
+    def __init__(self, cards, verdicts):
+        super().__init__(cards, verdicts)
+
+    @property
+    def progress(self):
+        return {
+            "seen": self.at,
+            "left": len(self.cards) - self.at,
+            "total": len(self.cards),
+        }
+

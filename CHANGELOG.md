@@ -14,6 +14,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   them — with the commands that create the database and fill it.
 - `admin/`: a local page for answering cards by hand, one at a time.
 - `admin/`: a second page for going back over the answers already given.
+- `admin/`: a third page for confirming the filter's verdicts, one press to agree.
 - `telegram_history`: builds cards from a Telegram Desktop channel export.
 - `close-session` skill: reads the session transcript and records the rules the
   person set, the corrections they made, and what subagents found as `Session`

@@ -1,7 +1,7 @@
 """The page, and the requests behind it.
 
-No framework: one page file, the rest is JSON. Two walks are served, and each
-has the same three requests — where we are, a decision, move on:
+No framework: one page file, the rest is JSON. Three walks are served, and
+each has the same three requests — where we are, a decision, move on:
 
     GET  /               answering: the page
     GET  /state          the card being asked about, the counts, the reasons
@@ -14,6 +14,13 @@ has the same three requests — where we are, a decision, move on:
     POST /review/next    leave the answer as it is and move on
     POST /review/back    step back to the card before this one
     POST /review/open    jump to the card named in the request
+
+    GET  /confirm        going over the filter's verdicts that have no answer: the page
+    GET  /confirm/state  the card, the verdict as the suggested answer, the counts
+    POST /confirm/answer record a different answer and move on
+    POST /confirm/next   take the verdict as the answer and move on
+    POST /confirm/back   step back to the card before this one
+    POST /confirm/open   jump to the card named in the request
 
 Every decision replies with where the walk now stands, so one press is one
 request. The panel writes to the database and has no notion of who is asking,
@@ -61,7 +68,9 @@ class Handler(BaseHTTPRequestHandler):
     db = None            # where decisions are written
     session = None       # the walk over cards with no answer yet
     open_review = None   # opens the walk back over the answers already given
+    open_confirm = None  # opens the walk over the filter's verdicts without an answer
     review = None
+    confirm = None
 
     def log_message(self, *args):
         pass  # the panel reports what it does; the request log adds noise
@@ -97,6 +106,20 @@ class Handler(BaseHTTPRequestHandler):
             Handler.review = Handler.open_review()
         return Handler.review
 
+    def confirming(self):
+        """The walk over the verdicts, opened the first time it is asked for."""
+        if Handler.confirm is None:
+            Handler.confirm = Handler.open_confirm()
+        return Handler.confirm
+
+    def walk_at(self, path):
+        """The walk a path belongs to, and the state to reply with."""
+        if path.startswith("/review/"):
+            return self.reviewing(), self.review_state
+        if path.startswith("/confirm/"):
+            return self.confirming(), self.confirm_state
+        return self.session, self.answering_state
+
     def answering_state(self):
         return {
             "mode": "answer",
@@ -116,46 +139,59 @@ class Handler(BaseHTTPRequestHandler):
             "reasons": REASONS,
         }
 
+    def confirm_state(self):
+        confirm = self.confirming()
+        return {
+            "mode": "confirm",
+            "card": as_json(confirm.current),
+            "answer": confirm.answer,  # the filter's verdict, standing as the suggestion
+            "progress": confirm.progress,
+            "reasons": REASONS,
+        }
+
     # -- routes ----------------------------------------------------------
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]  # `/review?card=…` is the page; the query is the page's to read
-        if path in ("/", "/review"):
+        if path in ("/", "/review", "/confirm"):
             self.send_page()
         elif path == "/state":
             self.send_json(self.answering_state())
         elif path == "/review/state":
             self.send_json(self.review_state())
+        elif path == "/confirm/state":
+            self.send_json(self.confirm_state())
         else:
             self.send_json({"error": "no such route"}, status=404)
 
     def do_POST(self):
-        if self.path == "/review/back":
-            # Stepping back decides nothing, so it needs no card to agree with.
-            self.reviewing().step_back()
-            self.send_json(self.review_state())
-            return
-        if self.path == "/review/open":
-            # Jumping decides nothing either; the card it names only has to exist.
-            try:
-                request = self.body()
-            except ValueError:
-                self.send_json({"error": "the request is not JSON"}, status=400)
-                return
-            if not self.reviewing().go_to(request.get("source"), str(request.get("externalId") or "")):
-                self.send_json({"error": "no answered card %s/%s" % (
-                    request.get("source"), request.get("externalId"))}, status=404)
-                return
-            self.send_json(self.review_state())
-            return
-        if self.path not in ("/answer", "/skip", "/review/answer", "/review/next"):
+        prefix, _, action = self.path.rpartition("/")
+        actions = {"": ("answer", "skip"), "/review": ("answer", "next", "back", "open"),
+                   "/confirm": ("answer", "next", "back", "open")}
+        if action not in actions.get(prefix, ()):
             self.send_json({"error": "no such route"}, status=404)
             return
-        walk = self.reviewing() if self.path.startswith("/review/") else self.session
+        walk, state = self.walk_at(self.path)
+
+        if action == "back":
+            # Stepping back decides nothing, so it needs no card to agree with.
+            walk.step_back()
+            self.send_json(state())
+            return
+
         try:
             request = self.body()
         except ValueError:
             self.send_json({"error": "the request is not JSON"}, status=400)
+            return
+
+        if action == "open":
+            # Jumping decides nothing either; the card it names only has to exist.
+            if not walk.go_to(request.get("source"), str(request.get("externalId") or "")):
+                self.send_json({"error": "no such card in this walk: %s/%s" % (
+                    request.get("source"), request.get("externalId"))}, status=404)
+                return
+            self.send_json(state())
             return
 
         card = walk.take(request.get("source"), request.get("externalId"))
@@ -165,36 +201,39 @@ class Handler(BaseHTTPRequestHandler):
                 status=409)
             return
 
-        if self.path in ("/answer", "/review/answer"):
+        if action == "answer":
             try:
                 accept, reasons = decision(request)
             except ValueError as error:
                 self.send_json({"error": str(error)}, status=400)
                 return
-            if self.path == "/answer":
+            if prefix == "":
                 upsert(Handler.db, [card])  # a card enters the set as it is answered
             record(Handler.db, card.source, card.id, accept, reasons)
+        elif prefix == "/confirm":
+            # Moving past a verdict is agreeing with it: it is written as the answer.
+            suggested = walk.answer
+            record(Handler.db, card.source, card.id, suggested["accept"], suggested["reasons"])
 
-        if self.path == "/answer":
-            walk.pending.remove(card)
-        elif self.path == "/skip":
-            walk.skip(card)
+        if prefix == "":
+            walk.pending.remove(card) if action == "answer" else walk.skip(card)
         else:
-            if self.path == "/review/answer":
+            if action == "answer":
                 walk.replace(card, accept, reasons)
             walk.move_on()
 
-        self.send_json(self.answering_state() if walk is self.session else self.review_state())
+        self.send_json(state())
 
 
-def serve(db, session, open_review, port):
+def serve(db, session, open_review, open_confirm, port):
     """Run until interrupted. Returns when the person stops it."""
     Handler.db = db
     Handler.session = session
     Handler.open_review = open_review
+    Handler.open_confirm = open_confirm
     server = ThreadingHTTPServer((HOST, port), Handler)
-    print("answering at http://%s:%d, reviewing at http://%s:%d/review — stop with Ctrl+C"
-          % (HOST, port, HOST, port))
+    print("answering at http://%s:%d, reviewing at /review, confirming verdicts at /confirm — stop with Ctrl+C"
+          % (HOST, port))
     try:
         server.serve_forever()
     except KeyboardInterrupt:

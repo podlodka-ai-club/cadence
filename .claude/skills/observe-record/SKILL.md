@@ -32,24 +32,32 @@ was not meant to know.
 ## 2. Ask memory what it holds
 
 Ask, never dump. Memory is the whole city's, not this post's, and a listing of
-everything in it would neither fit nor mean anything. Six questions are enough,
-and each is about this post:
+everything in it would neither fit nor mean anything. Each question is paid for
+by whoever owns the memory, so ask few and ask wide rather than many and narrow.
+Three are enough:
 
-1. What the post produced — the event, its occurrences and the places they are
-   held at — found by the source and the post's number.
-2. Whether the venue is **reachable from the event**: how many occurrences the
-   event has, and which places hang off them. Ask this outright rather than
-   inferring it from question 1 — a place can sit in memory under the right
-   name and address with nothing leading to it, and an answer that names the
-   place does not by itself say the event reaches it.
-3. Places whose **name** resembles the venue this post names.
-4. Places at the **same address**, whatever they are called.
-5. Events whose **title** resembles this one's.
-6. What else memory has **at the same time** as this event's occurrences.
+1. **What the post produced, and what reaches what.** The event, *every*
+   occurrence that event has, and which place each occurrence leads to — in one
+   question. Two traps sit here. A place can stand in memory under the right
+   name and the right address with nothing leading to it, so an answer that
+   merely names the place does not say the event reaches it: ask which place
+   each occurrence leads to, and treat an event with no occurrence as an event
+   that reaches no place. And an event already held gains occurrences from every
+   later post about it, so ask what the *event* holds, not what this post
+   contributed — the difference between the two is where a duplicated
+   occurrence hides.
+2. **Places like this one's venue** — named similarly, or standing at the same
+   address, whatever they are called.
+3. **Events titled like this one.**
 
-Questions 3–6 are how a duplicate shows itself: the same venue written twice, the
-same event announced by two posts, two records standing in one slot. An answer to
-them is a suspicion, not a verdict — see section 3.
+Questions 2 and 3 are how a duplicate shows itself: the same venue written
+twice, the same event announced by two posts. An answer to them is a suspicion,
+not a verdict — see section 3.
+
+**Ask for rows, not prose.** The read answers in prose unless told otherwise,
+and prose is both dearer for memory to produce and blurred exactly where a mark
+turns on an exact value — an empty field, a doubled string, a time of day. Ask
+for `raw-tables`, and read what is stored rather than what was said about it.
 
 **Ask for the key field first.** A record whose field is empty drops silently out
 of an answer that asked for that field, so a place with no address does not come

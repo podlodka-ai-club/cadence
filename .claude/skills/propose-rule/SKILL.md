@@ -45,8 +45,9 @@ cannot be followed leaves things exactly as they were.
 - Memory is asked what a person can go to on a given day — «куда можно сходить 30 августа»
   — and answers with what falls on that day.
 - Memory is fed a stream and not a book: a source writes about the same thing again, and
-  the later post is read into memory as well. So an instruction that reaches a few weeks
-  ahead need not reach further — what runs out is refilled by the next post about it.
+  the later post is read into memory as well. So an instruction that covers a stretch of
+  days ahead need not cover every day there will ever be — what runs out is refilled by
+  the next post about it.
 
 ## 3. Write one instruction
 

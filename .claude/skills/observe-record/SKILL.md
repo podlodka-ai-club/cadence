@@ -32,17 +32,22 @@ was not meant to know.
 ## 2. Ask memory what it holds
 
 Ask, never dump. Memory is the whole city's, not this post's, and a listing of
-everything in it would neither fit nor mean anything. Five questions are enough,
+everything in it would neither fit nor mean anything. Six questions are enough,
 and each is about this post:
 
 1. What the post produced — the event, its occurrences and the places they are
    held at — found by the source and the post's number.
-2. Places whose **name** resembles the venue this post names.
-3. Places at the **same address**, whatever they are called.
-4. Events whose **title** resembles this one's.
-5. What else memory has **at the same time** as this event's occurrences.
+2. Whether the venue is **reachable from the event**: how many occurrences the
+   event has, and which places hang off them. Ask this outright rather than
+   inferring it from question 1 — a place can sit in memory under the right
+   name and address with nothing leading to it, and an answer that names the
+   place does not by itself say the event reaches it.
+3. Places whose **name** resembles the venue this post names.
+4. Places at the **same address**, whatever they are called.
+5. Events whose **title** resembles this one's.
+6. What else memory has **at the same time** as this event's occurrences.
 
-Questions 2–5 are how a duplicate shows itself: the same venue written twice, the
+Questions 3–6 are how a duplicate shows itself: the same venue written twice, the
 same event announced by two posts, two records standing in one slot. An answer to
 them is a suspicion, not a verdict — see section 3.
 
@@ -83,7 +88,7 @@ Each mark is 5, 3 or 0, and each is given for its own part.
 |---|---|
 | 5 | the record is the only one for this event: either nothing like it was there, or memory recognised what was and added to it |
 | 3 | the event is readable, but either it is a second record of one already held, or `title` and `description` do not carry what the post says about it |
-| 0 | the post's event is not in memory at all, or it has no occurrence and no place — a record nothing leads to |
+| 0 | any one of: the post's event is not in memory; it has no occurrence; no place is reachable from it. A record nothing leads to is worth nothing, however well its own fields are filled |
 
 **Place** — the venue as a record.
 
@@ -91,10 +96,15 @@ Each mark is 5, 3 or 0, and each is given for its own part.
 |---|---|
 | 5 | the only record for this venue: nothing like it was there, or memory recognised what was |
 | 3 | the venue is readable, but either it is a second record of one already held, or `name` and `address` do not carry what the post says — the address standing in for a missing name, or an address the post gives and the record does not |
-| 0 | the venue is not in memory, or it is there and nothing leads to it |
+| 0 | either: the venue is not in memory; or it is in memory and no occurrence of this event leads to it. Right name and right address do not lift this — a venue nothing reaches is a venue nobody finds |
 
 A post that names no venue at all, or no date at all, is not a fault of memory:
 mark that part 5 and say so in `why`.
+
+An event left with no occurrence usually takes the other two marks down with it,
+because a venue is reached through an occurrence and there is none. Do not soften
+that: three zeros on one post say the post is wholly lost, which is the thing
+worth seeing.
 
 ## 5. Name what is wrong
 

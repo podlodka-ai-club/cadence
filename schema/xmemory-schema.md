@@ -1,0 +1,124 @@
+xmd_version: v1
+title: Places and Events Schema
+description: "City events and the places that host them, extracted from Russian-language Telegram posts."
+objects:
+  Event:
+    description: "An event a person can go to: one idea, no matter how many times it is held. An exhibition running for a month is one event; a play given three times is one event with three occurrences."
+    fields:
+      description:
+        type: str
+        required: false
+        description: "What the event is about: two or three sentences in your own words, following the post — what happens, who it is for, why it is interesting. No promotional phrasing, no emoji, no calls to subscribe or buy. Do not restate the date or the venue here: they have records of their own. Do state the price and the age limit in one closing sentence when the post gives them, because they have no fields of their own."
+        enum: null
+        default: null
+      title:
+        type: str
+        required: true
+        description: "The name of the event, short, the way a person looking for something to do would name it: «Шоу-кабаре \"Хиты Бродвея\"», «Выставка \"Барон Штиглиц\"». HARD CONSTRAINT: this value must never be null, an empty string, or whitespace only, and must never be a generic word such as «Мероприятие», «Событие», «Анонс», «Афиша», or «Концерт» with nothing further. It is what a reader searches by, and what recognising an event already held in memory rests on: a nameless or generic title leaves a record nobody can find and nothing can be matched against. When the post states no explicit name, build the title from what happens and where: «Экскурсия по крышам на Рубинштейна». If even that is impossible, use the first meaningful line of the post. Never put a date, a price, or a call to action such as «успей купить» into the title."
+        enum: null
+        default: null
+    primary_key:
+      - title
+  EventExternalId:
+    description: "A post that announced the event. An event has as many of these as the number of times it was written about."
+    fields:
+      external_id:
+        type: str
+        required: true
+        description: "The post's number in the channel, as a string: «45026». This value is handed to you together with the post — copy it verbatim. It is not a link, not an event id on some other website, and not a number taken from the text of the post."
+        enum: null
+        default: null
+      source:
+        type: str
+        required: true
+        description: "The channel the post came from, written as «t.me/channel_name». This value is handed to you together with the post — copy it verbatim. Do not derive it from the text of the post and do not replace it with the channel's Russian display name."
+        enum: null
+        default: null
+    primary_key:
+      - source
+      - external_id
+  Place:
+    description: "A venue where an event is held: a standing place with a name or an address. The same venue appears in posts from different channels and must stay one record."
+    fields:
+      address:
+        type: str
+        required: false
+        description: "The venue's address as the post writes it, without the city: «просп. Пятилеток, д. 1», «пл. Дворцовая, д. 2». Leave it empty when the post gives no address — do not derive it from the name and do not guess. An online event has no address."
+        enum: null
+        default: null
+      name:
+        type: str
+        required: true
+        description: "The venue's name as the post calls it: «Ледовый дворец», «Бар \"Сплетни\"», «Севкабель Порт», «Эрмитаж». HARD CONSTRAINT: this value must never be null, an empty string, or whitespace only, and must never be a generic word such as «Площадка», «Место», or «Адрес». It is what a reader recognises the venue by, and what matching a venue already held in memory rests on. A post usually writes the venue on one line together with the address («пл. Конюшенная, д. 2, Бар \"Сплетни\"») — the name is the part that is not the address. When the post gives no name but does give an address, the address becomes the name. When it gives neither, do not create a Place record at all."
+        enum: null
+        default: null
+    primary_key:
+      - name
+  Schedule:
+    description: "One occurrence of an event: a particular time at a particular venue. A post saying «22, 29 августа, 20:30» describes two occurrences, not one — create a record for each date it names. When the schedule is given in words («каждую субботу») and no dates are listed, create occurrences only for the dates the post actually names."
+    fields:
+      end_at:
+        type: str
+        required: false
+        description: "When the occurrence ends, ISO 8601 with the city's local offset: 2026-08-23T00:00:00+03:00. When the post gives a span such as «20:30–0:00» and the end is earlier than the start, the end falls on the next day. Leave it empty when the post gives no end — do not invent a duration."
+        enum: null
+        default: null
+      start_at:
+        type: str
+        required: true
+        description: "When the occurrence starts, ISO 8601 with the city's local offset: 2026-08-22T20:30:00+03:00. Take the time from the post as it stands, do not convert it to UTC. Posts usually omit the year — take it from the post's publication date, and mind the turn of the year: a post from December saying «3 января» means January of the following year. When the post names only a date and no hour, use the start of that day."
+        enum: null
+        default: null
+      status:
+        type: str
+        required: false
+        description: "The state of the occurrence: scheduled — announced and going ahead; cancelled — the post says it is called off; moved — the post says it was moved to another time or venue."
+        enum:
+          - scheduled
+          - cancelled
+          - moved
+        default: scheduled
+    primary_key: []
+relations:
+  event_external_ids:
+    description: "Links an event to the posts that announced it. Each post belongs to exactly one event."
+    objects:
+      event:
+        type: Event
+        on_delete: cascade
+        description: null
+      event_external_id:
+        type: EventExternalId
+        on_delete: cascade
+        description: null
+    keys:
+      unique_event_external_id:
+        - event_external_id
+  event_schedules:
+    description: "Links an event to its occurrences. Each occurrence belongs to exactly one event."
+    objects:
+      event:
+        type: Event
+        on_delete: cascade
+        description: null
+      schedule:
+        type: Schedule
+        on_delete: cascade
+        description: null
+    keys:
+      unique_schedule_event:
+        - schedule
+  place_schedules:
+    description: "Links a venue to the occurrences held there. Each occurrence is held at exactly one venue."
+    objects:
+      place:
+        type: Place
+        on_delete: cascade
+        description: null
+      schedule:
+        type: Schedule
+        on_delete: cascade
+        description: null
+    keys:
+      unique_schedule_place:
+        - schedule

@@ -28,48 +28,53 @@ sentence is an anecdote, and five of them saying the same thing is the fault.
 What a complaint says memory *did* is evidence. What a complaint proposes is a suggestion
 from someone who saw one post — take the intent, not the wording.
 
-## 2. Know what memory can hold
+## 2. Know what the system is for
 
-The instruction has to be carried out against a store of a particular shape, and one that
-cannot be followed leaves things exactly as they were.
+Posts about what is happening in a city are read into a memory one by one, as they are
+published. Out of each, memory is meant to keep three things that hold together: the
+event, when it is held, and where. A record missing any of the three is a record nobody
+can do anything with — an event nobody can turn up to, a time belonging to nothing, a
+venue nothing leads to.
 
-- An **occurrence** is a moment: when it starts, and when it ends where the post says so.
-  There is no repetition to store and no way to say «каждую субботу» — an instruction to
-  record a recurrence records nothing at all.
-- An occurrence stretched from the first day to the last is **one** evening in an answer,
-  not many. A run of days a reader can turn up to is a run of occurrences. An occurrence
-  left without an end is no better: it is still one moment, and whoever asks about a day
-  in the middle of it is told nothing.
-- An **event** is reached through its occurrences, and a **place** through them too. An
-  event with no occurrence is in memory and findable by nobody.
-- Memory is asked what a person can go to on a given day — «куда можно сходить 30 августа»
-  — and answers with what falls on that day.
-- Memory is fed a stream and not a book: a source writes about the same thing again, and
-  the later post is read into memory as well. So an instruction that covers a stretch of
-  days ahead need not cover every day there will ever be — what runs out is refilled by
-  the next post about it.
+One event may be held more than once, and memory can hold every one of those times. Each
+of them is a single occasion — it begins, and it ends where the post says so, and then it
+has happened. A rule about times is not a time: «каждую субботу» describes many occasions
+and is none of them, and memory keeps occasions.
 
-## 3. Write one instruction
+The posts are written by people rather than by a database, and that is where the work is.
+One event is announced in several posts under titles differing by a word. One venue is
+written now by its name, now by its address, now by what locals call it. Times, spans and
+durations are given loosely, in words rather than dates. Reading all of that into records
+that line up with the records already there — the same event recognised as the same, the
+same venue as the same — is what memory is for, and what it gets wrong.
 
-One instruction, in Russian: the posts are Russian and so is whoever reads them.
+Beyond that, what memory does with what it is given is not yours to assume. The complaints
+say what came out of it; what came out is what there is to go on.
 
-It rides in the context of **every** post memory is given, including the posts the
-complaints say nothing about. So:
+## 3. What the rule has to be
 
-- **Say when it applies** — the kind of post it is about, in the words such a post uses.
-  A post outside that kind must be left exactly as it was read before.
-- **Say what to produce, out of what.** Concrete enough to act on without deciding
-  anything: what record, from which words of the post.
-- **Say where it stops.** An instruction that can be carried out forever will be. Where
-  the post names an end, that is the limit. Where it names none — and a post about a
-  thing that simply goes on usually names none — the instruction still has to stop
-  somewhere that can be counted to from the post's own publication date. Stopping
-  nowhere is not an answer: it puts the reader back where the complaint started.
-- **Anchor dates to the post**, never to today — its publication date, or a date it names.
-  A run repeated tomorrow has to come out the same way.
+The instruction rides in the context of **every** post memory is given, including all the
+posts the complaints say nothing about. Two things are asked of it, and they pull against
+each other.
 
-Two to four sentences. No list, no heading, no explaining why: the reader of this is not
-being persuaded, it is being told.
+**It must do no harm.**
+
+- It must not swell memory with records that carry nothing. A memory padded out is not a
+  memory improved, and whoever asks it a question pays for every record it holds.
+- It must not leave more events without a time or without a venue than there were before.
+  A record nothing reaches is worse than a thin one: it is invisible.
+- A post the complaints are not about has to come out of it as it came out before.
+
+**It must make the next write better** — a time read out of a post more exactly than it
+was, an event recognised as one memory already holds, a venue recognised as one it
+already knows.
+
+Say when the instruction applies, in the words the posts themselves use, and say what to
+do concretely enough that carrying it out decides nothing further.
+
+Two to four sentences, in Russian: the posts are Russian and so is whoever reads them. No
+list, no heading, no explaining why — the reader of this is not being persuaded, it is
+being told.
 
 ## 4. Return the instruction
 

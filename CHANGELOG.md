@@ -62,6 +62,12 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `deploy/`: the service the online parser runs under, and the script that ships
   a new version to a machine already running it.
 - `deploy/`: the sudoers rule letting the parser's account restart its own service.
+- `storage`: the `observations` collection — how one post landed in one memory, marked
+  by an observer.
+- `memory/`: writes a set of cards into an xmemory instance, marks how each of them
+  landed, drafts a rule from the complaints and decides it on two memories.
+- `propose-rule` skill: words one instruction to whatever writes posts into memory,
+  out of what the observers of a memory complained about.
 
 ### Changed
 
@@ -75,5 +81,6 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `close-session` skill: records who a fact came from (`author`).
 - `retrospective` skill: takes the task to run as its argument — `process` for new
   records, `sync` to resolve the ones an earlier run left open.
+- `storage`: a rule says who it is addressed to, the filter or memory.
 
 ### Fixed

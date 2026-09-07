@@ -1,23 +1,33 @@
-"""The rules the filter is given, and where each of them stands.
+"""The rules drawn from what went wrong, and where each of them stands.
 
-A rule is bound to one reason and describes the kind of card that reason is
-wrongly given to; the filter withholds the reason on such a card and reports
-the rule's name on the verdict. Nothing here decides which rules a run gets —
-the caller does, by status or by name.
+A rule is addressed to one of two readers. A `filter` rule is bound to one
+refusal reason and describes the kind of card that reason is wrongly given to;
+the filter withholds the reason on such a card and reports the rule's name on
+the verdict. A `memory` rule is given to whatever writes a post into memory and
+says how to read a post of a certain kind; it names no reason, because there is
+no refusal to lift. Nothing here decides which rules anything gets — the caller
+does, by target, by status or by name.
 """
 from datetime import datetime, timezone
 
-from storage.schema import REASONS, RULE_STATUSES
+from storage.schema import REASONS, RULE_STATUSES, RULE_TARGETS
 
 
-def add(db, name, reason, text, cards=(), proposed_from=None, status="draft"):
-    """Write one rule. A second write under the same name replaces the reason,
-    the text, the cards and the origin, and leaves the status and the gate alone."""
+def add(db, name, text, target="filter", reason=None, cards=(), proposed_from=None, status="draft"):
+    """Write one rule. A second write under the same name replaces the text, the
+    cards and the origin, and leaves the status and the gate alone."""
     if status not in RULE_STATUSES:
         raise ValueError("no such status: %s" % status)
-    if reason not in REASONS or reason == "unknown":
+    if target not in RULE_TARGETS:
+        raise ValueError("no such target: %s" % target)
+    if target == "filter" and (reason not in REASONS or reason == "unknown"):
         raise ValueError("not a reason a rule can withhold: %s" % reason)
-    fields = {"reason": reason, "text": text, "cards": [{"source": s, "externalId": str(e)} for s, e in cards]}
+    if target == "memory" and reason is not None:
+        raise ValueError("a memory rule withholds no reason, so it names none")
+    fields = {"target": target, "text": text,
+              "cards": [{"source": s, "externalId": str(e)} for s, e in cards]}
+    if reason is not None:
+        fields["reason"] = reason
     if proposed_from:
         fields["proposedFrom"] = proposed_from
     db.rules.update_one(
@@ -40,9 +50,12 @@ def decide(db, name, status, gate=None):
         raise KeyError("no rule named %s" % name)
 
 
-def with_status(db, status):
-    """Every rule in one status, oldest first."""
-    return list(db.rules.find({"status": status}, {"_id": 0}).sort("proposedAt", 1))
+def with_status(db, status, target=None):
+    """Every rule in one status, oldest first; of one target when named."""
+    query = {"status": status}
+    if target is not None:
+        query["target"] = target
+    return list(db.rules.find(query, {"_id": 0}).sort("proposedAt", 1))
 
 
 def named(db, names):

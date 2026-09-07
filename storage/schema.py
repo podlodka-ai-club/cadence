@@ -27,6 +27,46 @@ REASONS = {
 # that it is not proposed again.
 RULE_STATUSES = ("draft", "active", "rejected")
 
+# Who a rule is addressed to. A `filter` rule is given to the filter alongside a
+# card and withholds one refusal reason; a `memory` rule is given to whatever
+# writes a post into memory and says how to read one. The two are drawn from
+# different evidence and judged by different numbers, and never mix.
+RULE_TARGETS = ("filter", "memory")
+
+# The three parts of a post an observation marks, each on its own.
+OBSERVATION_AXES = ("schedule", "event", "place")
+
+# What a mark below 5 is blamed on. The observer hands out these labels and says
+# `other` where none of them fits — which is how the list learns it is short.
+# The vocabulary is written down here for whatever counts labels; unlike the
+# refusal reasons it is not enforced at write time, because an observation has
+# already been paid for by the memory it questioned and a label outside the list
+# is a finding rather than a reason to refuse it.
+OBSERVATION_LABELS = {
+    "schedule": ("no-occurrences", "mode-collapsed", "doors-time", "end-missing",
+                 "time-lost", "wrong-date", "occurrence-duplicate"),
+    "event": ("duplicate", "title-generic", "facts-lost", "not-found", "unlinked"),
+    "place": ("duplicate", "name-is-address", "address-missing", "two-places-in-one",
+              "not-found", "unlinked"),
+}
+
+# One mark: what it is, what it is blamed on, and why it was given. A 5 carries
+# no label and anything less carries at least one, but that is the observer's
+# business rather than the database's — see OBSERVATION_LABELS.
+MARK = {
+    "bsonType": "object",
+    "required": ["score", "labels", "why"],
+    "additionalProperties": False,
+    "properties": {
+        "score": {"enum": [0, 3, 5]},
+        "labels": {"bsonType": "array", "uniqueItems": True, "items": {"bsonType": "string"}},
+        "why": {"bsonType": "string", "minLength": 1},
+    },
+}
+
+# A name that reads the same to a person and to a path: lowercase words joined by dashes.
+NAME_PATTERN = r"^[a-z0-9]+(?:-[a-z0-9]+)*$"
+
 # A source name is a path-safe name of where the post came from: `t.me/a_channel`.
 # Segments of word characters joined by `/`, and no `.` or `..` segment that
 # could walk out of a directory built from it — the same rule `parsers.card`
@@ -159,18 +199,24 @@ COLLECTIONS = {
         "indexes": [
             {"keys": [("name", 1)], "name": "name", "unique": True},
             {"keys": [("status", 1)], "name": "status", "unique": False},
+            {"keys": [("target", 1), ("status", 1)], "name": "target_status", "unique": False},
         ],
         "validator": {
+          "$and": [
+            {
             "$jsonSchema": {
                 "bsonType": "object",
-                "required": ["name", "reason", "text", "status", "cards", "proposedAt"],
+                "required": ["name", "target", "text", "status", "cards", "proposedAt"],
                 "additionalProperties": False,
                 "properties": {
                     "_id": {"bsonType": "objectId"},
-                    "name": {"bsonType": "string", "pattern": r"^[a-z0-9]+(?:-[a-z0-9]+)*$"},
-                    # The reason the rule withholds. `unknown` is not a reason a rule corrects.
+                    "name": {"bsonType": "string", "pattern": NAME_PATTERN},
+                    # Who the rule is addressed to: the filter, or whatever writes into memory.
+                    "target": {"enum": list(RULE_TARGETS)},
+                    # The reason the rule withholds — a filter rule only, and never `unknown`.
                     "reason": {"enum": sorted(set(REASONS) - {"unknown"})},
-                    # When the reason is lifted: "if the text says …, do not give <reason>".
+                    # A filter rule: when the reason is lifted, "if the text says …, do not
+                    # give <reason>". A memory rule: how to read a post of a certain kind.
                     "text": {"bsonType": "string", "minLength": 1},
                     "status": {"enum": list(RULE_STATUSES)},
                     "cards": {
@@ -189,27 +235,59 @@ COLLECTIONS = {
                     # Where the rule came from: the run whose disagreements it was drawn from, or a note.
                     "proposedFrom": {"bsonType": "string"},
                     "decidedAt": {"bsonType": "date"},
-                    # What the gate saw: the candidate run against the base run over `of`
-                    # answered cards — agreement before and after on the whole set, and on
-                    # the `fired` cards the rule described, how many it fixed and broke.
+                    # What the gate saw. A filter rule is judged on runs: the candidate
+                    # run against the base run over `of` answered cards — agreement before
+                    # and after on the whole set, and on the `fired` cards the rule
+                    # described, how many it fixed and broke. A memory rule is judged on
+                    # observations: the same cards observed in the instance written
+                    # `before` the rule and in the one written `after` it, their marks
+                    # summed, and how many cards rose and how many lost an axis.
                     "gate": {
-                        "bsonType": "object",
-                        "required": ["run", "base", "of", "agreeBefore", "agreeAfter", "fired", "fixed", "broken"],
-                        "additionalProperties": False,
-                        "properties": {
-                            "run": {"bsonType": "string", "minLength": 1},
-                            "base": {"bsonType": "string", "minLength": 1},
-                            "of": {"bsonType": "int"},
-                            "agreeBefore": {"bsonType": "int"},
-                            "agreeAfter": {"bsonType": "int"},
-                            "fired": {"bsonType": "int"},
-                            "fixed": {"bsonType": "int"},
-                            "broken": {"bsonType": "int"},
-                            "brokenOnAccept": {"bsonType": "int"},
-                        },
+                        "oneOf": [
+                            {
+                                "bsonType": "object",
+                                "required": ["run", "base", "of", "agreeBefore", "agreeAfter", "fired", "fixed", "broken"],
+                                "additionalProperties": False,
+                                "properties": {
+                                    "run": {"bsonType": "string", "minLength": 1},
+                                    "base": {"bsonType": "string", "minLength": 1},
+                                    "of": {"bsonType": "int"},
+                                    "agreeBefore": {"bsonType": "int"},
+                                    "agreeAfter": {"bsonType": "int"},
+                                    "fired": {"bsonType": "int"},
+                                    "fixed": {"bsonType": "int"},
+                                    "broken": {"bsonType": "int"},
+                                    "brokenOnAccept": {"bsonType": "int"},
+                                },
+                            },
+                            {
+                                "bsonType": "object",
+                                "required": ["before", "after", "of", "scoreBefore", "scoreAfter", "fixed", "broken"],
+                                "additionalProperties": False,
+                                "properties": {
+                                    "before": {"bsonType": "string", "minLength": 1},
+                                    "after": {"bsonType": "string", "minLength": 1},
+                                    "of": {"bsonType": "int"},
+                                    "scoreBefore": {"bsonType": "int"},
+                                    "scoreAfter": {"bsonType": "int"},
+                                    "fixed": {"bsonType": "int"},
+                                    "broken": {"bsonType": "int"},
+                                },
+                            },
+                        ],
                     },
                 },
             },
+            },
+            # Only a filter rule is bound to a refusal reason; a memory rule
+            # corrects how a post is read, and there is no reason to name.
+            {
+                "$or": [
+                    {"target": "filter", "reason": {"$exists": True}},
+                    {"target": "memory", "reason": {"$exists": False}},
+                ],
+            },
+          ],
         },
     },
 
@@ -254,7 +332,7 @@ COLLECTIONS = {
                 "additionalProperties": False,
                 "properties": {
                     "_id": {"bsonType": "objectId"},
-                    "name": {"bsonType": "string", "pattern": r"^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+                    "name": {"bsonType": "string", "pattern": NAME_PATTERN},
                     # What the set is for, in a sentence.
                     "note": {"bsonType": "string"},
                     "cards": {
@@ -272,6 +350,57 @@ COLLECTIONS = {
                         },
                     },
                     "createdAt": {"bsonType": "date"},
+                },
+            },
+        },
+    },
+
+    # One observation: what one post left in one memory, as an observer saw it.
+    # Three marks — the times the event is held, the event itself, the venue —
+    # each with what it is blamed on and why it was given. There is no right
+    # answer written by a person here: the observer holds the post against what
+    # memory returned and says how far apart they are, which is what makes an
+    # observation cheap enough to have many of.
+    #
+    # `instance` is the memory that was questioned; the same post observed in
+    # two instances is two records, and that is the whole point — a rule is
+    # judged by setting one against the other. Observing the same card twice in
+    # one instance is allowed too, because re-checking a mark that looked wrong
+    # is data as well; whoever reads takes the latest by `observedAt`.
+    "observations": {
+        "indexes": [
+            {"keys": [("instance", 1), ("source", 1), ("externalId", 1), ("observedAt", -1)],
+             "name": "instance_source_externalId_observedAt", "unique": False},
+            {"keys": [("instance", 1), ("observedAt", -1)], "name": "instance_observedAt", "unique": False},
+        ],
+        "validator": {
+            "$jsonSchema": {
+                "bsonType": "object",
+                "required": ["instance", "set", "source", "externalId",
+                             "schedule", "event", "place", "model", "observedAt"],
+                "additionalProperties": False,
+                "properties": {
+                    "_id": {"bsonType": "objectId"},
+                    # The xmemory instance the observer questioned, by its id.
+                    "instance": {"bsonType": "string", "minLength": 1},
+                    # The set the card was observed as part of.
+                    "set": {"bsonType": "string", "pattern": NAME_PATTERN},
+                    "source": {"bsonType": "string", "pattern": SOURCE_PATTERN},
+                    "externalId": {"bsonType": "string"},
+                    "schedule": MARK,
+                    "event": MARK,
+                    "place": MARK,
+                    # What the observer asked memory, in its own words, one line each.
+                    "asked": {"bsonType": "array", "items": {"bsonType": "string"}},
+                    # One sentence on what would keep the worst of it from happening
+                    # again; `null` when there was nothing to keep from happening.
+                    "proposal": {"bsonType": ["string", "null"]},
+                    # The model that observed: two marks are comparable only from the same.
+                    "model": {"bsonType": "string", "minLength": 1},
+                    # What the observation cost, in dollars and in seconds.
+                    "costUsd": {"bsonType": ["double", "int"]},
+                    "seconds": {"bsonType": ["int", "long", "double"]},
+                    "observedAt": {"bsonType": "date"},
                 },
             },
         },

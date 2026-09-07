@@ -11,7 +11,8 @@ rules the database enforces, and the commands that create and fill them.
 | `cards` | one post as it stood in its source, in the shape a parser produces |
 | `answers` | the right answer about one card: was it an event, and if not, why |
 | `verdicts` | what the filter said about one card in one run |
-| `rules` | a rule the filter can be given, and where it stands: draft, active or rejected |
+| `rules` | a rule the filter or memory can be given, and where it stands: draft, active or rejected |
+| `observations` | how one post landed in one memory, marked by an observer |
 | `sets` | a named set of cards to judge, and what each card is in it for |
 | `runs` | what produced a run's verdicts: the rules the filter was given and the model |
 | `sources` | a source being read, and how far into it the reading got |
@@ -42,12 +43,18 @@ rules the filter applied and the model that judged. `live` is the run of the fil
 production, one verdict per card; any other run name is an evaluation, kept whole so two
 can be compared. A verdict is never an answer: the answer is the person's.
 
-A rule has a `name`, one `reason` from the list above, and a `text` of one form: *if the
-text says such-and-such, do not give this reason*. The filter lifts the reason on such a
-card and reports the rule's name on the verdict. A rule only takes a reason away, never
-adds one, so rules cannot contradict each other. Where a rule stands — `draft`, `active`,
-`rejected` — is kept here with the cards it was drawn from and the numbers it was
-judged on; a rejected rule stays so that it is not proposed again.
+A rule has a `name`, a `text`, and a `target` saying who it is addressed to. A rule
+targeting `filter` also carries one `reason` from the list above, and its text is of one
+form: *if the text says such-and-such, do not give this reason*. The filter lifts the
+reason on such a card and reports the rule's name on the verdict. A filter rule only
+takes a reason away, never adds one, so two of them cannot contradict each other. A rule
+targeting `memory` is given instead to whatever writes a post into memory, and says how
+to read a post of a certain kind; it names no reason, because there is no refusal to
+lift. Where a rule stands — `draft`, `active`, `rejected` — is kept here with the cards
+it was drawn from and the numbers it was judged on; a rejected rule stays so that it is
+not proposed again. The numbers come in two shapes, because the two kinds of rule are
+judged on different evidence: a filter rule on two runs of the filter, a memory rule on
+the observations of two memories.
 
 The list is closed: a reason outside it cannot be stored. The same words have to mean
 the same thing to everyone who writes here, so a new reason is a change to
@@ -59,6 +66,19 @@ carries `why` — the labels saying what it is there for, a defect it once produ
 control it provides — so that a set says what it was assembled to cover. Choosing
 differently means writing another set under another name; the old one stays, along with
 every run made over it.
+
+An observation is one card seen in one memory: three marks — `schedule`, `event` and
+`place` — each 5, 3 or 0, with the labels saying what it is blamed on and a sentence
+saying why it was given, plus what the observer asked and what it proposes be done
+differently. There is no answer from a person here: the marks come from holding the post
+against what memory returned, which is what makes them cheap enough to have many of.
+`instance` is the memory that was questioned, so the same card seen in two memories makes
+two records — that is what a memory rule is judged on. The same card seen twice in one
+memory makes two as well, because re-checking a mark that looked wrong is data too;
+whoever reads takes the latest by `observedAt`. The labels are a closed vocabulary in
+`schema.py` that the database does not enforce: an observation has already been paid for
+by the memory it questioned, and a label outside the list is a finding rather than a
+reason to refuse the write.
 
 A source is a name and a place in it: `startAt`, the moment to read from before anything
 has been read, and `lastMessageId`, the last post already stored. The cursor moves only
@@ -131,4 +151,4 @@ already there and changes nothing.
 | `load_cards.py` | reads card files and puts them in `cards` |
 | `add_source.py` | adds a source to read |
 | `show_card.py` | prints one card, by the source and number that address it |
-| `cards.py`, `answers.py`, `verdicts.py`, `rules.py`, `runs.py`, `sets.py`, `sources.py` | reading and writing each collection |
+| `cards.py`, `answers.py`, `verdicts.py`, `rules.py`, `runs.py`, `sets.py`, `observations.py`, `sources.py` | reading and writing each collection |

@@ -30,8 +30,9 @@ python -m judge.run --run NAME [--rules SET] [--set NAME] [--answered] [--source
 
 - `--rules` — which rules from the `rules` collection the filter is given: `active`
   (the default), `none`, or names separated by commas. `active,NAME` is how a draft
-  is put through the gate: the active rules plus the candidate. The set is recorded
-  on the run, and a run cannot be resumed with a different one.
+  is put through the gate: the active rules plus the candidate. Only the rules
+  addressed to the filter are taken; naming one of memory's is refused. The set is
+  recorded on the run, and a run cannot be resumed with a different one.
 - `--set` — only the cards of a named set from the `sets` collection. A set is
   written once and never edited, so two runs over the same one are comparable.
 - `--answered` — only cards that have an answer: the eval set.

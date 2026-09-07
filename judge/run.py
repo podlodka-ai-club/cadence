@@ -116,13 +116,18 @@ def batches(cards, size):
 
 def rule_set(db, spec):
     """The rules `--rules` asks for, as stored. `active`, `none`, or names;
-    `active` among the names stands for every active rule."""
+    `active` among the names stands for every active rule of the filter's.
+
+    Only the filter's: the same collection holds the rules memory is given, and
+    those name no reason, because there is no refusal to lift. One of those
+    handed to the filter would be an instruction to withhold a reason nobody
+    drew it about."""
     chosen = []
     for part in [p.strip() for p in spec.split(",") if p.strip()]:
         if part == "none":
             continue
         if part == "active":
-            chosen.extend(rules.with_status(db, "active"))
+            chosen.extend(rules.with_status(db, "active", target="filter"))
         else:
             chosen.extend(rules.named(db, [part]))
     seen = set()
@@ -131,6 +136,9 @@ def rule_set(db, spec):
         if rule["name"] not in seen:
             seen.add(rule["name"])
             unique.append(rule)
+    other = [rule["name"] for rule in unique if rule.get("target") != "filter"]
+    if other:
+        raise KeyError("not a rule the filter is given: %s" % ", ".join(other))
     return unique
 
 

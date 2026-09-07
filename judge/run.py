@@ -1,8 +1,8 @@
 """Hand cards to the filter-card skill and keep what it says about them.
 
-    python -m judge.run --run NAME [--rules SET] [--answered] [--source S] [--from DATE]
-                        [--to DATE] [--limit N] [--batch N] [--parallel N] [--model M]
-                        [--db NAME] [--dry-run]
+    python -m judge.run --run NAME [--rules SET] [--set NAME] [--answered] [--source S]
+                        [--from DATE] [--to DATE] [--limit N] [--batch N] [--parallel N]
+                        [--model M] [--db NAME] [--dry-run]
 
 - `--run NAME` — which run the verdicts belong to. `live` is the filter as it
   stands in production; any other name is an evaluation run.
@@ -12,6 +12,8 @@
   candidate to the active ones — how a draft is put through the gate. The
   set is recorded on the run, and a run resumed with a different set is
   refused.
+- `--set NAME` — only the cards of a named set from `sets`. A set is fixed
+  once and not edited, so two runs over the same set are comparable.
 - `--answered` — only cards that have an answer in `answers`: the eval set.
 - `--source`, `--from`, `--to` — narrow the cards to one source and a span of
   posting dates (`YYYY-MM-DD`; `--to` is exclusive). Start small: one day, one
@@ -52,7 +54,7 @@ from pymongo.errors import PyMongoError
 if __package__ in (None, ""):  # run by path rather than with -m: put the repo on the path
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from storage import answers, rules, runs, verdicts
+from storage import answers, rules, runs, sets, verdicts
 from storage.cards import stored
 from storage.mongo import database
 from storage.schema import REASONS
@@ -93,6 +95,9 @@ def select(db, args):
             span["$lt"] = args.until
         query["date"] = span
     cards = stored(db, query)
+    if args.set:
+        chosen = set(sets.members(db, args.set))
+        cards = [card for card in cards if (card.source, card.id) in chosen]
     if args.answered:
         eval_set = answers.answered(db)
         cards = [card for card in cards if (card.source, card.id) in eval_set]
@@ -248,6 +253,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--run", required=True, help="which run the verdicts belong to; `live` is production")
     parser.add_argument("--rules", default="active", help="rules to judge by: active, none, or names (default: active)")
+    parser.add_argument("--set", dest="set", default=None, help="only the cards of this named set from `sets`")
     parser.add_argument("--answered", action="store_true", help="only cards that have an answer: the eval set")
     parser.add_argument("--source", default=None, help="only cards of this source")
     parser.add_argument("--from", dest="since", type=day, default=None, help="posted on or after this day (YYYY-MM-DD)")
@@ -264,11 +270,11 @@ def main(argv=None):
         with database(args.db) as db:
             try:
                 chosen = rule_set(db, args.rules)
+                rule_names = [r["name"] for r in chosen]
+                rule_reasons = {r["name"]: r["reason"] for r in chosen}
+                cards, done = select(db, args)
             except KeyError as error:
                 sys.exit(error.args[0])
-            rule_names = [r["name"] for r in chosen]
-            rule_reasons = {r["name"]: r["reason"] for r in chosen}
-            cards, done = select(db, args)
             report("run %s in %s: %d cards to judge, %d already judged, rules: %s" % (
                 args.run, db.name, len(cards), done, ", ".join(rule_names) or "none"))
             for source in sorted({card.source for card in cards}):

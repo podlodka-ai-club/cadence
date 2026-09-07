@@ -237,6 +237,46 @@ COLLECTIONS = {
         },
     },
 
+    # A named set of cards to judge, fixed once and never edited: a run over a
+    # set is comparable to any other run over it, which it would not be if the
+    # cards underneath had moved. Changing the choice means writing another
+    # set, not touching this one. `cards` keeps the order the cards were
+    # chosen in, and `why` on each says what it is there for — a defect it
+    # once produced, or the control it provides.
+    "sets": {
+        "indexes": [
+            {"keys": [("name", 1)], "name": "name", "unique": True},
+        ],
+        "validator": {
+            "$jsonSchema": {
+                "bsonType": "object",
+                "required": ["name", "cards", "createdAt"],
+                "additionalProperties": False,
+                "properties": {
+                    "_id": {"bsonType": "objectId"},
+                    "name": {"bsonType": "string", "pattern": r"^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+                    # What the set is for, in a sentence.
+                    "note": {"bsonType": "string"},
+                    "cards": {
+                        "bsonType": "array",
+                        "minItems": 1,
+                        "items": {
+                            "bsonType": "object",
+                            "required": ["source", "externalId"],
+                            "additionalProperties": False,
+                            "properties": {
+                                "source": {"bsonType": "string", "pattern": SOURCE_PATTERN},
+                                "externalId": {"bsonType": "string"},
+                                "why": {"bsonType": "array", "items": {"bsonType": "string"}},
+                            },
+                        },
+                    },
+                    "createdAt": {"bsonType": "date"},
+                },
+            },
+        },
+    },
+
     # A source the online parser reads, and where it got to in it. Adding a
     # document here is how a channel starts being read; there is nothing to
     # deploy. `lastMessageId` is the last post taken from the source, and the

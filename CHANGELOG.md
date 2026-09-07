@@ -52,6 +52,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `storage`: the `schema_changes` collection — a change to the schema a memory was
   given, proposed where no rule could have helped, and where it stands.
 - `memory.gate`: decides a schema change as well as a rule.
+- `schema/`: the xmemory schema in force, kept in the repository.
 
 ### Changed
 

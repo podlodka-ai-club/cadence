@@ -1,62 +1,225 @@
 # cadence
 
-Posts about what is happening in a city are published faster than anyone can read them.
-This project takes them as they come, decides which of them announce something a person
-could go to, writes those into a memory that can be asked questions, and then checks its
-own work: what it wrote is marked against what the post said, and what the marks complain
-about is turned into a rule for the next write.
+## What we are doing
 
-Everything here is a command run from this directory, and every part keeps what it
-produces in MongoDB, so that any step can be repeated and two runs of it compared.
+Personal agents are multiplying, and each of them knows its person better than the last.
+People bring them everything, weekends included — *what is worth going to on Saturday?* —
+and that is where an agent gets stuck. What is on in the city is scattered across a hundred
+channels, written as prose meant for a reader, stale by Monday, and there is nothing to
+query.
 
-## The parts
+The answer is a place the agent can come to: ask in plain words, say what its person likes
+and what they would rather avoid, and get back the events that fit — each with its time and
+its place.
 
-| | |
-| --- | --- |
-| [`parsers/`](parsers/) | reads a source of posts and builds a card per post |
-| [`storage/`](storage/) | the database: cards, answers, verdicts, rules, sets, observations |
-| [`admin/`](admin/) | pages for answering cards by hand, one at a time |
-| [`judge/`](judge/) | hands cards to the filter and measures what it said |
-| [`memory/`](memory/) | writes cards into memory, marks how they landed, drafts and decides rules |
-| [`scripts/`](scripts/), [`deploy/`](deploy/) | unattended launchers, and the service the parser runs under |
+Building that takes five components:
 
-And the skills — the parts carried out by a model rather than by code, each with its own
-instructions in `.claude/skills/`:
+1. **Collecting** the posts.
+2. **Filtering** out what is not an event, and what is unsafe to take in.
+3. **Parsing** each post into an event, its times and its places.
+4. **Storing** all of it.
+5. **A way in**, and the program that answers the questions.
 
-| | |
-| --- | --- |
-| `filter-card` | decides whether a card is an event worth keeping |
-| `observe-record` | marks how one post landed in memory, and says what would keep the worst of it from happening again |
-| `propose-rule` | words one instruction out of what the observers complained about — or says the fault is in the schema and a person must decide |
-| `close-session`, `retrospective`, `manager` | the same loop applied to this repository's own work |
+Three of them — 2, 3 and 5 — are carried out by an LLM. That is why the project also needs
+an internal process of its own:
 
-## The two loops
+- building an eval,
+- marking how the LLM did, and proposing what would improve it,
+- putting each proposal through the eval, and taking it or throwing it away.
 
-They are the same shape, and each is closed by a gate that decides on numbers rather than
-on an opinion.
+## 1. Collecting
 
-**The filter.** Cards are judged against answers a person gave; where the judge and the
-person disagree, a rule is drafted; a run with the rule is set against a run without it,
-and the rule becomes `active` or `rejected` — see [`judge/`](judge/).
+There can be any number of parsers, each reading a source of its own. What they have in
+common is what comes out of them: a card written into the database, carrying
 
-**Memory.** Cards are written into an xmemory instance; an observer marks each against the
-post it came from; the commonest complaint becomes a rule; the same cards are written into
-a second instance with the rule in hand, marked again, and the two sets of marks decide it
-— see [`memory/`](memory/).
+- an id unique within that source,
+- the date of the post,
+- what the post says, in the form it says it,
 
-Where the memory loop finds that no rule could help — the fault being in the schema memory
-was given rather than in how it was read — it says so and stops, and a person decides.
+and whatever else is worth keeping.
+
+Two are built:
+
+- posts from Telegram channels as they are published,
+- historical posts from Telegram channels, out of a JSON export of one.
+
+Those sources were chosen because what they carry is about as undetermined as information
+gets — far more so than a scraped website or an RSS feed — which makes them the right
+material to tune the system as a whole on.
+
+## 2. Filtering
+
+What arrives from outside may be no event at all, may be something happening in the city
+rather than something to attend — a closed road — may carry too little to act on, and may
+carry a prompt injection. Every card goes to an agent, which returns a verdict.
+
+The agent decides one thing, and decides it by the rules its skill lays down: does the card
+go on to be parsed, or is it filtered out, and for which reason.
+
+The filter is run through [`judge`](judge/), and the same command runs the eval — it is the arguments
+that differ.
+
+The reasons it can refuse for are a closed list. Extending it, or changing how the filter
+judges, goes through the learning process below rather than through an edit made on the
+spot.
+
+### The eval of that agent
+
+It starts with **the reference set**: cards a person has ruled on themselves. It grows out
+of the filter's own work — the verdicts are opened in a UI of its own, [`admin`](admin/),
+where the person goes through them one at a time and either agrees with what the filter
+said or puts down their own answer instead. Every card they pass is one more card that
+later comparisons stand on.
+
+The filter judges by the rules its skill lays down,
+[`filter-card`](.claude/skills/filter-card/SKILL.md). It is meant for a cheap or a local
+model: one post, one decision, calling for neither much context nor much cleverness. At
+launch it is handed rules out of the database on top of the skill, which is what makes a
+comparison easy to set up — the rules in force, a candidate, or both.
+
+Setting what came back against the reference set is a script's work and is done
+deterministically: a verdict has a fixed shape — take or drop, with reasons from a closed
+list — so agreement is counted rather than judged.
+
+Where this stands. The runs so far have used a strong model, and against the reference set
+it differs on some 2.5% of the take-or-drop decisions. The loop that would go from those
+disagreements to a rule proposed on its own and put through the eval is not finished.
+
+## 3. Parsing
+
+The parsing and the storing are an outside system's: <https://xmemory.ai/>. Cards go to it
+as they stand, with neither place nor time pulled out on our side, and what it holds is
+read back by asking in words rather than in a query language. The schema those records are
+kept under is in [Storage](#4-storage); how they are read, in [The way in](#5-the-way-in).
+
+xmemory takes the extraction on itself, and it is a black box while it does so. Its work
+therefore has to be watched: the faults found, and corrected where correcting them is
+possible.
+
+### The eval of that agent
+
+Because xmemory is somebody else's system, what judges it is an observer — the skill
+[`observe-record`](.claude/skills/observe-record/SKILL.md). It reads a record out of
+xmemory and holds it against the card that record was made from. Knowing what the post
+said, it marks how the parsing went in three planes: how much of the place came through,
+how much of the event, and how much of the times it is held. The marks and its own remarks
+go into MongoDB for whatever comes next.
+
+What the observers left is then worked over by an agent of its own,
+[`propose-rule`](.claude/skills/propose-rule/SKILL.md): it weighs what they ran into, how
+often each kind of trouble comes up and what they proposed about it, and words a rule that
+would settle it. What comes out is one of two things:
+
+- a meta-rule added to the cards as they are sent to xmemory — the path not recommended;
+- a change to the schema, or a fuller description of the data on xmemory's side.
+
+Either way a new rule means a new memory: an instance is raised, the schema deployed onto
+it, the eval sample written in, and the result weighed against the rules and the schema in
+force. The same cards are observed again there, and it is the two sets of marks — before
+the change and after it — that decide the proposal, rather than anyone's opinion of it.
+
+The loop is run by the `memory` commands — write a set into an instance, ask it a question,
+observe what it holds, propose, decide; [`memory/`](memory/) has them in detail.
+
+## 4. Storage
+
+Two stores, and what a record is for decides which one holds it.
+
+### MongoDB
+
+Everything the project holds about its own work.
+
+- **Reference data** — the channels being read online, and how far into each of them the
+  reading has got.
+- **Event cards** — the post as it arrived from outside, the verdict the filter gave on it,
+  and the answer a person gave about it. The three are kept apart rather than folded into
+  one record: a card is judged in many runs and those verdicts have to stay comparable,
+  while the person's answer is the one everything is measured against and is not to be
+  confused with a machine's.
+- **Eval material** — the cards gathered into named sets, the runs made over them, the
+  rules, the marks an observer left on what memory did with a post, and what was proposed
+  to improve the rules and the schema.
+
+There is one schema, and a database uses the part of it that its work calls for. The one
+production writes into holds the cards and the sources and nothing else; an evaluation
+database is where the sets, the marks and the proposals accumulate.
+
+### xmemory
+
+What xmemory is and what it does is at <https://xmemory.ai/>.
+
+The parsed data lives there:
+
+- the places events are held at,
+- the events themselves,
+- the dates and times an event is held at, each tied to the place it is held at.
+
+The schema those records are kept under is xmemory's own — an instance is created with it.
+But changing that schema is part of the work here, since the eval can find the fault to be
+in the schema rather than in how a post was read, so the version in force is kept in this
+repository too: [`schema/xmemory-schema.md`](schema/xmemory-schema.md).
+
+## 5. The way in
+
+xmemory gives an agentic interface of its own: it takes a question asked in words and
+answers it. Questions from outside can be relayed to it through the entry points it already
+provides — <https://xmemory.ai/integration-overview/#manual-integrations>.
+
+What this project has to put in front of that is proxies of its own — a chat bot, an MCP
+server, and the like. None of them is built.
 
 ## Getting started
 
-Python, MongoDB, and `.env` at the root with `MONGO_URI` and `MONGO_DB`:
+**Prerequisites**
+
+- MongoDB — where [`storage`](storage/) writes.
+- xmemory — an account, and an instance raised with the schema in
+  [`schema/xmemory-schema.md`](schema/xmemory-schema.md); its MCP server added to Claude
+  Code is how the observer reads that instance.
+- Claude Code (`claude`) — the filter, the observer and `propose-rule` all run on it.
+- Python 3.
+
+**Init storage**
 
 ```
 pip install -r requirements.txt
+cp .env.example .env        # fill in MONGO_URI and MONGO_DB
 python -m storage.setup
 ```
 
-Then the part you need: [`parsers/`](parsers/) to collect posts, [`judge/`](judge/) to
-measure the filter, [`memory/`](memory/) to run the memory loop end to end.
+**Collect cards**
 
-`untracked/` is where working material goes — exports, logs, samples. Git keeps none of it.
+From a Telegram Desktop export:
+
+```
+python -m parsers.telegram_history <export> --out <dir>
+python -m storage.load_cards <dir>
+```
+
+Or from the channels as they publish:
+
+```
+python -m parsers.telegram_live --login
+python -m storage.add_source t.me/a_channel
+python -m parsers.telegram_live
+```
+
+On a server that parser runs as a service — see [`deploy/`](deploy/).
+
+**Filter them**
+
+```
+python -m judge.run --run live
+```
+
+The rest is in the READMEs of the parts: [`parsers/`](parsers/) for the sources,
+[`storage/`](storage/) for what the database holds, [`judge/`](judge/) for the eval of the
+filter, [`admin/`](admin/) for marking cards up by hand, [`memory/`](memory/) for the
+memory loop, [`deploy/`](deploy/) for running the online parser as a service.
+
+## Known issues
+
+- The filter does not look at a card for a prompt injection.
+- The filter's loop is not closed: wording a rule out of the disagreements is still a
+  person's work, and nothing proposes one on its own.
+- A named set of cards can only be made from code; there is no command for it.

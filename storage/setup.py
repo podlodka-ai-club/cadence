@@ -22,6 +22,22 @@ from storage.mongo import database
 from storage.schema import COLLECTIONS
 
 
+def carry_over(db, name):
+    """Bring documents written under an earlier shape up to the current one, and
+    say what was changed. A validator is only ever met at write time, so a field
+    added to a collection that already holds documents leaves them behind until
+    something tries to write one and is refused.
+
+    `target` on a rule is such a field: every rule written before rules had a
+    target was one the filter is given. This runs after the new validator is on
+    the collection, not before: the old one would refuse the very field being
+    added."""
+    if name != "rules":
+        return None
+    done = db.rules.update_many({"target": {"$exists": False}}, {"$set": {"target": "filter"}})
+    return "%d without a target given `filter`" % done.modified_count if done.modified_count else None
+
+
 def ensure(db, name, definition):
     """Create or update one collection. Returns what it did, for the report."""
     validation = {
@@ -58,7 +74,9 @@ def main(argv=None):
             for name in wanted:
                 definition = COLLECTIONS[name]
                 done = ensure(db, name, definition)
-                print("%-10s %-18s %d indexes" % (name, done, len(definition["indexes"])))
+                carried = carry_over(db, name)
+                print("%-12s %-18s %d indexes%s" % (
+                    name, done, len(definition["indexes"]), "  (%s)" % carried if carried else ""))
             print("%s is ready" % db.name)
     except PyMongoError as error:
         raise SystemExit("database error: %s" % error)

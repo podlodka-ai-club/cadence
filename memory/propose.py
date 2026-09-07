@@ -21,6 +21,11 @@ observers wrote to a model, and keeps what it writes as a draft rule in the
   drawing of cards and numbers is the same; only the wording is a person's.
 - `--dry-run` — print the draft and write nothing.
 
+The skill is given two things: the complaints, and the schema the instance was
+created with — what memory was told to keep, which bounds what any instruction
+can ask of it. It may answer that no instruction can help and the schema itself
+is at fault; then nothing is written and the verdict is printed for a person.
+
 The wording is the `propose-rule` skill's work, in a session of its own; this
 module chooses the complaint, hands them over and keeps what comes back. Like
 every session started in this repository, it reads the instructions here and
@@ -35,6 +40,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 
 from pymongo.errors import PyMongoError
 
@@ -47,12 +53,18 @@ from storage.schema import OBSERVATION_AXES
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-TEXT_BLOCK = re.compile(r"```(?:text)?\s*(.+?)```", re.S)
+JSON_BLOCK = re.compile(r"```json\s*(\{.*?\})\s*```", re.S)
 TIMEOUT = 600
 
-PROMPT = """Run the propose-rule skill on these complaints:
+PROMPT = """Run the propose-rule skill on the schema and the complaints below.
 
-%(complaints)s
+The schema memory was given:
+
+<<SCHEMA>>
+
+The complaints:
+
+<<COMPLAINTS>>
 """
 
 
@@ -92,21 +104,45 @@ def material(latest, axis_labels, cards):
     return "\n".join(lines)
 
 
-def write_rule(complaint, model):
-    """Hand the complaints to the propose-rule skill, and return what it wrote.
-    How a rule is worded is the skill's business and not this module's: it is
-    the part meant to get better, and it gets better as a skill rather than as
-    a string in here."""
+def schema_of(instance):
+    """The schema the instance was created with, as it stands now. The skill is
+    given it rather than sent to look for it: what memory was told to do is an
+    argument of the question, and a session with no way to read anything can
+    read nothing it was not handed."""
+    handle, path = tempfile.mkstemp(suffix=".yaml")
+    os.close(handle)
+    try:
+        completed = subprocess.run(
+            ["xmemcli", "--instance-id", instance, "schema", "get", "-o", path],
+            capture_output=True, text=True, timeout=TIMEOUT,
+        )
+        if completed.returncode != 0:
+            raise SystemExit("xmemcli could not get the schema of %s: %s" % (
+                instance, (completed.stderr or completed.stdout).strip()[-400:]))
+        return open(path, encoding="utf-8").read()
+    finally:
+        os.unlink(path)
+
+
+def write_rule(schema, complaint, model):
+    """Hand the schema and the complaints to the propose-rule skill, and return
+    the verdict and the text it came back with. How a rule is worded is the
+    skill's business and not this module's: it is the part meant to get better,
+    and it gets better as a skill rather than as a string in here."""
+    prompt = PROMPT.replace("<<SCHEMA>>", schema).replace("<<COMPLAINTS>>", complaint)
     completed = subprocess.run(
-        ["claude", "-p", PROMPT % {"complaints": complaint}, "--model", model,
+        ["claude", "-p", prompt, "--model", model,
          "--output-format", "json", "--allowedTools", "Skill"],
         cwd=REPO, capture_output=True, text=True, timeout=TIMEOUT,
     )
     if completed.returncode != 0:
         raise SystemExit("claude exited %d: %s" % (completed.returncode, completed.stderr.strip()[-400:]))
     reply = (json.loads(completed.stdout).get("result") or "").strip()
-    found = TEXT_BLOCK.search(reply)
-    return (found.group(1) if found else reply).strip()
+    found = JSON_BLOCK.search(reply)
+    if not found:
+        raise SystemExit("no JSON block in the reply: %s" % reply[-600:])
+    answer = json.loads(found.group(1))
+    return answer.get("verdict"), (answer.get("text") or "").strip()
 
 
 def main(argv=None):
@@ -158,11 +194,18 @@ def main(argv=None):
                 " and ".join("%s/%s" % pair for pair in wanted), len(cards)))
 
             if args.text:
-                text = open(args.text, encoding="utf-8").read().strip()
+                verdict, text = "rule", open(args.text, encoding="utf-8").read().strip()
             else:
-                text = write_rule(material(latest, wanted, cards), args.model)
+                verdict, text = write_rule(schema_of(args.instance),
+                                           material(latest, wanted, cards), args.model)
             if not text:
                 sys.exit("nothing came back to make a rule of")
+            if verdict == "schema":
+                print("\nno rule: the fault is in the schema, and a person decides what to do\n")
+                print(text)
+                return
+            if verdict != "rule":
+                sys.exit("the skill answered neither rule nor schema, but %r" % verdict)
 
             controls = []
             if args.control:

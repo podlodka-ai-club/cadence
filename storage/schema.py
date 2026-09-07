@@ -406,6 +406,86 @@ COLLECTIONS = {
         },
     },
 
+    # A change to the schema a memory was given, proposed where no instruction
+    # could have helped: the fault was in what memory was told to keep rather
+    # than in how it read a post. This is not a rule and never rides in a
+    # wrapper — a rule is given to whoever writes one post, a schema change is
+    # given to a memory once and holds for everything written into it
+    # afterwards. The two are judged by the same numbers and kept apart so that
+    # neither can be applied as the other.
+    #
+    # `finding` is what the observer's complaints and the schema together
+    # showed, in the words of whatever diagnosed it; `change` is what a person
+    # decided to write instead, and only a person writes it. A draft with no
+    # `change` is a question waiting for an answer.
+    "schema_changes": {
+        "indexes": [
+            {"keys": [("name", 1)], "name": "name", "unique": True},
+            {"keys": [("status", 1)], "name": "status", "unique": False},
+        ],
+        "validator": {
+            "$and": [
+                {
+                    "$jsonSchema": {
+                        "bsonType": "object",
+                        "required": ["name", "instance", "finding", "status", "cards", "proposedAt"],
+                        "additionalProperties": False,
+                        "properties": {
+                            "_id": {"bsonType": "objectId"},
+                            "name": {"bsonType": "string", "pattern": NAME_PATTERN},
+                            # The memory whose schema was diagnosed.
+                            "instance": {"bsonType": "string", "minLength": 1},
+                            # What was found: which sentence causes the fault, and why no
+                            # instruction could correct it.
+                            "finding": {"bsonType": "string", "minLength": 1},
+                            # Where it applies: the record and the field whose description changes.
+                            "object": {"bsonType": "string"},
+                            "field": {"bsonType": "string"},
+                            # What a person decided to write instead, word for word as it
+                            # went into the schema. A draft has none until one decides.
+                            "change": {"bsonType": "string", "minLength": 1},
+                            "status": {"enum": list(RULE_STATUSES)},
+                            "cards": {
+                                "bsonType": "array",
+                                "items": {
+                                    "bsonType": "object",
+                                    "required": ["source", "externalId"],
+                                    "additionalProperties": False,
+                                    "properties": {
+                                        "source": {"bsonType": "string", "pattern": SOURCE_PATTERN},
+                                        "externalId": {"bsonType": "string"},
+                                    },
+                                },
+                            },
+                            "proposedAt": {"bsonType": "date"},
+                            "proposedFrom": {"bsonType": "string"},
+                            "approvedAt": {"bsonType": "date"},
+                            "decidedAt": {"bsonType": "date"},
+                            # The memory written under the schema as it was, against the
+                            # memory written under the schema as changed.
+                            "gate": {
+                                "bsonType": "object",
+                                "required": ["before", "after", "of", "scoreBefore", "scoreAfter", "fixed", "broken"],
+                                "additionalProperties": False,
+                                "properties": {
+                                    "before": {"bsonType": "string", "minLength": 1},
+                                    "after": {"bsonType": "string", "minLength": 1},
+                                    "of": {"bsonType": "int"},
+                                    "scoreBefore": {"bsonType": "int"},
+                                    "scoreAfter": {"bsonType": "int"},
+                                    "fixed": {"bsonType": "int"},
+                                    "broken": {"bsonType": "int"},
+                                },
+                            },
+                        },
+                    },
+                },
+                # Nothing is decided before a person has said what to write instead.
+                {"$or": [{"status": "draft"}, {"change": {"$exists": True}}]},
+            ],
+        },
+    },
+
     # A source the online parser reads, and where it got to in it. Adding a
     # document here is how a channel starts being read; there is nothing to
     # deploy. `lastMessageId` is the last post taken from the source, and the

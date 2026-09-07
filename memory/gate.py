@@ -1,7 +1,8 @@
-"""Decide a memory rule from the observations of the memory before and after it.
+"""Decide a memory rule, or a schema change, from the observations of the memory
+before and after it.
 
     python -m memory.gate NAME --before INSTANCE_ID --after INSTANCE_ID
-                          [--db NAME] [--dry-run]
+                          [--schema] [--db NAME] [--dry-run]
 
 Two memories hold the same set of posts, one written without the rule and one
 with it. The rule is judged on its own cards — the ones it was drawn from, and
@@ -15,6 +16,13 @@ post has to be worth something on the posts it is about, and cost nothing on
 the rest. It becomes `active`; otherwise `rejected`, and a rejected rule stays
 so that it is not proposed again. The numbers go on the rule either way.
 
+`--schema` decides a draft from `schema_changes` instead of a rule from `rules`.
+The arithmetic is the same — the two are judged by the same evidence — but they
+are kept apart because they are applied differently: a rule is given to whoever
+writes one post, a schema change is given to a memory once and holds for
+everything written into it afterwards. A schema change is only decided once a
+person has said what to write instead.
+
 Only a draft is decided. Nothing here costs xmemory anything: the marks were
 paid for when they were made.
 """
@@ -27,7 +35,7 @@ from pymongo.errors import PyMongoError
 if __package__ in (None, ""):  # run by path rather than with -m: put the repo on the path
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from storage import observations, rules
+from storage import observations, rules, schema_changes
 from storage.mongo import database
 from storage.schema import OBSERVATION_AXES
 
@@ -61,7 +69,9 @@ def decision(both, fixed, broken):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("name", metavar="NAME", help="the draft rule to decide")
+    parser.add_argument("name", metavar="NAME", help="the draft to decide")
+    parser.add_argument("--schema", action="store_true",
+                        help="decide a schema change rather than a rule")
     parser.add_argument("--before", required=True, metavar="INSTANCE_ID", help="the memory written without the rule")
     parser.add_argument("--after", required=True, metavar="INSTANCE_ID", help="the memory written with it")
     parser.add_argument("--db", default=None, help="database to work in (default: MONGO_DB)")
@@ -70,17 +80,22 @@ def main(argv=None):
 
     try:
         with database(args.db) as db:
+            collection = schema_changes if args.schema else rules
+            what = "schema change" if args.schema else "rule"
             try:
-                rule = rules.named(db, [args.name])[0]
+                judged = collection.named(db, [args.name])[0]
             except KeyError as error:
                 sys.exit(error.args[0])
-            if rule.get("target") != "memory":
+            if not args.schema and judged.get("target") != "memory":
                 sys.exit("rule %s is addressed to the filter, and is decided by judge.gate" % args.name)
-            if rule["status"] != "draft":
-                sys.exit("rule %s is %s already, not a draft" % (args.name, rule["status"]))
-            cards = [(card["source"], card["externalId"]) for card in rule["cards"]]
+            if args.schema and not judged.get("change"):
+                sys.exit("schema change %s has no decision on it yet: a person says what to write "
+                         "instead before it can be judged" % args.name)
+            if judged["status"] != "draft":
+                sys.exit("%s %s is %s already, not a draft" % (what, args.name, judged["status"]))
+            cards = [(card["source"], card["externalId"]) for card in judged["cards"]]
             if not cards:
-                sys.exit("rule %s names no card to judge it on" % args.name)
+                sys.exit("%s %s names no card to judge it on" % (what, args.name))
 
             before = observations.latest(db, args.before, cards)
             after = observations.latest(db, args.after, cards)
@@ -108,7 +123,7 @@ def main(argv=None):
             if args.dry_run:
                 print("  nothing written")
                 return
-            rules.decide(db, args.name, status, gate)
+            collection.decide(db, args.name, status, gate)
             print("  written")
     except PyMongoError as error:
         sys.exit("database error: %s" % error)

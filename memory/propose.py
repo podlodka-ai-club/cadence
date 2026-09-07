@@ -23,8 +23,11 @@ observers wrote to a model, and keeps what it writes as a draft rule in the
 
 The skill is given two things: the complaints, and the schema the instance was
 created with — what memory was told to keep, which bounds what any instruction
-can ask of it. It may answer that no instruction can help and the schema itself
-is at fault; then nothing is written and the verdict is printed for a person.
+can ask of it. It answers with one of two things, and they are kept in different
+collections because they are applied in different ways: a rule, which rides in
+the wrapper of every post and goes to `rules`; or a finding that no instruction
+could help and the schema itself is at fault, which goes to `schema_changes` as
+a draft and waits for a person to say what to write instead.
 
 The wording is the `propose-rule` skill's work, in a session of its own; this
 module chooses the complaint, hands them over and keeps what comes back. Like
@@ -47,7 +50,7 @@ from pymongo.errors import PyMongoError
 if __package__ in (None, ""):  # run by path rather than with -m: put the repo on the path
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from storage import observations, rules
+from storage import observations, rules, schema_changes
 from storage.mongo import database
 from storage.schema import OBSERVATION_AXES
 
@@ -193,6 +196,12 @@ def main(argv=None):
             print("\ndrafting about %s, on %d cards" % (
                 " and ".join("%s/%s" % pair for pair in wanted), len(cards)))
 
+            controls = []
+            if args.control:
+                controls = [tuple(part.strip().rsplit("/", 1)) for part in args.control.split(",")]
+            drawn_from = "instance %s · %s · %d cards" % (
+                args.instance, " and ".join("%s/%s" % pair for pair in wanted), len(cards))
+
             if args.text:
                 verdict, text = "rule", open(args.text, encoding="utf-8").read().strip()
             else:
@@ -203,15 +212,17 @@ def main(argv=None):
             if verdict == "schema":
                 print("\nno rule: the fault is in the schema, and a person decides what to do\n")
                 print(text)
+                print("\ncards: %s" % ", ".join("%s/%s" % key for key in cards + controls))
+                if args.dry_run:
+                    print("\nnothing written")
+                    return
+                schema_changes.add(db, args.name, args.instance, text, cards=cards + controls,
+                                   proposed_from=drawn_from)
+                print("\nwritten as a draft in schema_changes — it waits for a person to say what")
+                print("to write instead, and is judged once a memory has been written under it")
                 return
             if verdict != "rule":
                 sys.exit("the skill answered neither rule nor schema, but %r" % verdict)
-
-            controls = []
-            if args.control:
-                controls = [tuple(part.strip().rsplit("/", 1)) for part in args.control.split(",")]
-            drawn_from = "instance %s · %s · %d cards" % (
-                args.instance, " and ".join("%s/%s" % pair for pair in wanted), len(cards))
 
             print("\n%s (draft, target memory)\n%s\n" % (args.name, text))
             print("cards: %s" % ", ".join("%s/%s" % key for key in cards + controls))

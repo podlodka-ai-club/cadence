@@ -82,16 +82,27 @@ from, so that the gate can see what the instruction costs where it was not neede
 `--text` takes the wording from a file instead of a model, for a rule a person words
 better; everything else — the cards, the origin, the numbers — is drawn the same way.
 
+The skill answers with one of two things, and they go to different collections because
+they are applied in different ways. A **rule** rides in the wrapper of every post and is
+written to `rules`. A **finding** that no instruction could have helped — the fault being
+in the schema memory was given — is written to `schema_changes` as a draft, and waits
+there for a person to say what to write instead.
+
 **Decide the rule.**
 
 ```
-python -m memory.gate NAME --before INSTANCE_ID --after INSTANCE_ID [--dry-run]
+python -m memory.gate NAME --before INSTANCE_ID --after INSTANCE_ID [--schema] [--dry-run]
 ```
 
 Two memories hold the same set, one written without the rule and one with it. On the
 rule's own cards: a card is fixed when its three marks add up to more than they did, broken
 when any one of the three came out lower. The rule passes when it fixed at least one and
 broke none, and the numbers go on it either way.
+
+`--schema` decides a draft from `schema_changes` instead — the same arithmetic on the same
+kind of evidence, written to the other collection. There the two memories differ by the
+schema they were created with rather than by anything in the wrapper, and only a change a
+person has already worded can be judged.
 
 Neither `propose` nor `gate` asks memory anything — they read marks already paid for.
 

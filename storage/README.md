@@ -13,6 +13,7 @@ rules the database enforces, and the commands that create and fill them.
 | `verdicts` | what the filter said about one card in one run |
 | `rules` | a rule the filter or memory can be given, and where it stands: draft, active or rejected |
 | `observations` | how one post landed in one memory, marked by an observer |
+| `schema_changes` | a change to the schema a memory was given, and where it stands |
 | `sets` | a named set of cards to judge, and what each card is in it for |
 | `runs` | what produced a run's verdicts: the rules the filter was given and the model |
 | `sources` | a source being read, and how far into it the reading got |
@@ -79,6 +80,17 @@ whoever reads takes the latest by `observedAt`. The labels are a closed vocabula
 `schema.py` that the database does not enforce: an observation has already been paid for
 by the memory it questioned, and a label outside the list is a finding rather than a
 reason to refuse the write.
+
+A schema change is what is proposed where no rule could have helped: the fault being in
+what memory was told to keep rather than in how it read a post. It is not a rule and never
+rides in a wrapper — a rule is given to whoever writes one post, a schema change is given
+to a memory once and holds for everything written into it afterwards — and the two are
+kept in separate collections so that neither can be applied as the other. `finding` is
+what was diagnosed: which sentence of the schema causes the fault and why no instruction
+could correct it. `change` is what a person decided to write instead, and only a person
+writes it: a draft with no `change` is a question still waiting for an answer, and nothing
+is decided before it is answered. Beyond that the two are judged alike, on the same marks
+of the same cards in two memories.
 
 A source is a name and a place in it: `startAt`, the moment to read from before anything
 has been read, and `lastMessageId`, the last post already stored. The cursor moves only
@@ -151,4 +163,4 @@ already there and changes nothing.
 | `load_cards.py` | reads card files and puts them in `cards` |
 | `add_source.py` | adds a source to read |
 | `show_card.py` | prints one card, by the source and number that address it |
-| `cards.py`, `answers.py`, `verdicts.py`, `rules.py`, `runs.py`, `sets.py`, `observations.py`, `sources.py` | reading and writing each collection |
+| `cards.py`, `answers.py`, `verdicts.py`, `rules.py`, `runs.py`, `sets.py`, `observations.py`, `schema_changes.py`, `sources.py` | reading and writing each collection |

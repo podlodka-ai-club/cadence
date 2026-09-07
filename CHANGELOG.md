@@ -68,6 +68,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   landed, drafts a rule from the complaints and decides it on two memories.
 - `propose-rule` skill: words one instruction to whatever writes posts into memory,
   out of what the observers of a memory complained about.
+- `storage`: the `schema_changes` collection — a change to the schema a memory was
+  given, proposed where no rule could have helped, and where it stands.
+- `memory.gate`: decides a schema change as well as a rule.
 
 ### Changed
 

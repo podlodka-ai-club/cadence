@@ -53,6 +53,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `storage`: the sources being read, and where the reading got to in each.
 - `storage`: a command that adds a source to read.
 - a sink that puts the cards a parser built into the database.
+- `observe-record` skill: marks how one post landed in memory — its schedule, its
+  event and its place — and names what would keep the worst of it from happening again.
+- `storage.show_card`: prints one card, by the source and number that address it.
 - `storage`: the `sets` collection — a named set of cards to judge, written once and
   not edited afterwards.
 - `judge.run`: `--set` narrows a run to the cards of a named set.

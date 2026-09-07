@@ -104,6 +104,12 @@ python -m storage.load_cards [PATH ...] [--db NAME] [--dry-run]
 twice leaves one copy of each: a card is upserted by `(source, externalId)`, its post
 refreshed and everything else left alone, so an answer already given survives it.
 
+Print one card, for whoever has a record and needs the post behind it:
+
+```
+python -m storage.show_card SOURCE EXTERNAL_ID [--db NAME]
+```
+
 Add a source to read:
 
 ```
@@ -124,4 +130,5 @@ already there and changes nothing.
 | `setup.py` | creates the collections and brings them to the current schema |
 | `load_cards.py` | reads card files and puts them in `cards` |
 | `add_source.py` | adds a source to read |
+| `show_card.py` | prints one card, by the source and number that address it |
 | `cards.py`, `answers.py`, `verdicts.py`, `rules.py`, `runs.py`, `sets.py`, `sources.py` | reading and writing each collection |

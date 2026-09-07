@@ -23,14 +23,17 @@ Cards come from the `cards` collection, so put them there first. Then, from the
 repository root:
 
 ```
-python -m judge.run --run NAME [--rules SET] [--answered] [--source S] [--from DATE]
-                    [--to DATE] [--limit N] [--batch N] [--parallel N] [--model M] [--dry-run]
+python -m judge.run --run NAME [--rules SET] [--set NAME] [--answered] [--source S]
+                    [--from DATE] [--to DATE] [--limit N] [--batch N] [--parallel N]
+                    [--model M] [--dry-run]
 ```
 
 - `--rules` — which rules from the `rules` collection the filter is given: `active`
   (the default), `none`, or names separated by commas. `active,NAME` is how a draft
   is put through the gate: the active rules plus the candidate. The set is recorded
   on the run, and a run cannot be resumed with a different one.
+- `--set` — only the cards of a named set from the `sets` collection. A set is
+  written once and never edited, so two runs over the same one are comparable.
 - `--answered` — only cards that have an answer: the eval set.
 - `--source`, `--from`, `--to` — one source, a span of posting days (`--to` exclusive).
 - `--limit` — at most this many cards.

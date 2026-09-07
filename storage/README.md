@@ -12,11 +12,12 @@ rules the database enforces, and the commands that create and fill them.
 | `answers` | the right answer about one card: was it an event, and if not, why |
 | `verdicts` | what the filter said about one card in one run |
 | `rules` | a rule the filter can be given, and where it stands: draft, active or rejected |
+| `sets` | a named set of cards to judge, and what each card is in it for |
 | `runs` | what produced a run's verdicts: the rules the filter was given and the model |
 | `sources` | a source being read, and how far into it the reading got |
 
 Not every database holds them all. The evaluation set keeps cards and the answers given
-about them, along with the verdicts, rules and runs of the filter; the database that
+about them, along with the sets, verdicts, rules and runs of the filter; the database that
 collects posts keeps cards and the sources they come from. Which collections a database
 has is said when it is created, and the schema is the same either way.
 
@@ -51,6 +52,13 @@ judged on; a rejected rule stays so that it is not proposed again.
 The list is closed: a reason outside it cannot be stored. The same words have to mean
 the same thing to everyone who writes here, so a new reason is a change to
 `schema.py` — and to whatever has already been answered under the old list.
+
+A set is a named list of cards, written once and not edited: two runs over the same
+set are comparable because the cards underneath them did not move. Each card in a set
+carries `why` — the labels saying what it is there for, a defect it once produced or the
+control it provides — so that a set says what it was assembled to cover. Choosing
+differently means writing another set under another name; the old one stays, along with
+every run made over it.
 
 A source is a name and a place in it: `startAt`, the moment to read from before anything
 has been read, and `lastMessageId`, the last post already stored. The cursor moves only
@@ -116,4 +124,4 @@ already there and changes nothing.
 | `setup.py` | creates the collections and brings them to the current schema |
 | `load_cards.py` | reads card files and puts them in `cards` |
 | `add_source.py` | adds a source to read |
-| `cards.py`, `answers.py`, `verdicts.py`, `rules.py`, `runs.py`, `sources.py` | reading and writing each collection |
+| `cards.py`, `answers.py`, `verdicts.py`, `rules.py`, `runs.py`, `sets.py`, `sources.py` | reading and writing each collection |

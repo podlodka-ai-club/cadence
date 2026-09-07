@@ -41,6 +41,10 @@ of them is a single occasion — it begins, and it ends where the post says so, 
 has happened. A rule about times is not a time: «каждую субботу» describes many occasions
 and is none of them, and memory keeps occasions.
 
+What memory is asked for is a schedule, cut from whichever of the three sides the asker
+holds: what is on at this venue, what is on at this time, when this event is on. An answer
+is only as good as the side it was cut by.
+
 The posts are written by people rather than by a database, and that is where the work is.
 One event is announced in several posts under titles differing by a word. One venue is
 written now by its name, now by its address, now by what locals call it. Times, spans and

@@ -48,9 +48,6 @@ Check the working tree before doing anything else. If there are uncommitted chan
 and ask the person what to do with them — commit, stash, discard, or build on top. Do not
 decide on their behalf, and do not start work that would bury them.
 
-With no person to ask — a `one-shot` run — do not start at all. The one-shot process
-defines what happens next; this rule only says the session does not proceed.
-
 ## Design discussions
 
 When the person opens a new feature or change by wanting to discuss it first, let them lay
@@ -64,7 +61,7 @@ Never commit changes directly to `main`. When work starts and the checkout is on
 create a branch and switch to it first — before the first edit, not before the commit.
 
 Name the branch after the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
-type the work will carry: `<type>/<short-kebab-description>`, e.g. `feat/close-session-skill`
+type the work will carry: `<type>/<short-kebab-description>`, e.g. `feat/card-source-filter`
 or `fix/transcript-timestamp`. Same type vocabulary as the commits — `feat`, `fix`, `docs`,
 `refactor`, `test`, `chore`, and the rest.
 
@@ -80,8 +77,8 @@ check passing on its own.
 - Keep each commit focused on a single task.
 - The commit message describes the changes in that commit.
 - Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/):
-  `<type>[optional scope][!]: <description>`, e.g. `feat(close-session): record subagent
-  findings`. A breaking change is marked with `!` before the colon, or a
+  `<type>[optional scope][!]: <description>`, e.g. `feat(judge): report the cost of a
+  run`. A breaking change is marked with `!` before the colon, or a
   `BREAKING CHANGE:` footer.
 - A change that exists only to support another — a `CHANGELOG.md` entry, a new
   `.gitignore` rule, a placeholder file — rides in the commit of the change it supports,

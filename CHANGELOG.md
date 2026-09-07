@@ -7,13 +7,6 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
 
-### Known issues
-
-- `retrospective` skill: its draft-rule outcome still writes to the `Filter Rules`
-  xmemory instance, which the filter no longer reads — filter rules live in the
-  `rules` collection now. A rule the retrospective drafts goes nowhere until the skill
-  is redirected.
-
 ### Added
 
 - `parsers/`: parsers that read different sources of posts and build cards.
@@ -22,20 +15,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `admin/`: a local page for answering cards by hand, one at a time.
 - `admin/`: a second page for going back over the answers already given.
 - `telegram_history`: builds cards from a Telegram Desktop channel export.
-- `close-session` skill: reads the session transcript and records the rules the
-  person set, the corrections they made, and what subagents found as `Session`
-  entries in xmemory.
 - `filter-card` skill: decides whether a card is an event worth keeping and returns
   the verdict — accepted, or refused with reasons from a closed list.
-- `retrospective` skill: turns unprocessed session records into one change — a pull
-  request, a draft filter rule, or an issue — and closes the rest with a reason.
-- `manager` skill: carries out one task with no person in the loop — prepares an
-  isolated worktree, hands the work to the skill that owns it, and closes the
-  session.
-- `scripts/`: unattended launchers that run the manager on the retrospective's two
-  tasks, one run of a job at a time, logging each run.
-- `scripts/sync-main.sh`: fast-forwards the checkout cron runs from, so a run
-  follows the current skills rather than the ones it was cloned with.
 - `storage`: the verdicts the filter gave, kept per run.
 - `judge/`: runs the filter over cards in batches and measures a run — against
   the answers, or against another run.
@@ -81,9 +62,6 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   directory is not named after it.
 - `storage.setup`: takes the collections to bring up, for a database that holds
   only some of them.
-- `close-session` skill: records who a fact came from (`author`).
-- `retrospective` skill: takes the task to run as its argument — `process` for new
-  records, `sync` to resolve the ones an earlier run left open.
 - `storage`: a rule says who it is addressed to, the filter or memory.
 
 ### Fixed

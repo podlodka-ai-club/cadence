@@ -87,3 +87,5 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `storage`: a rule says who it is addressed to, the filter or memory.
 
 ### Fixed
+
+- `judge.run`: gives the filter only the rules addressed to it, not the ones memory is given.

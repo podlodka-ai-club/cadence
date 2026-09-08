@@ -230,3 +230,9 @@ database and memories that start empty — the reference set written in, a quest
 cannot yet answer, the observer, a proposal, a second memory under the change, the gate's
 decision, and the same question answered. What it needs and how to run it is in
 [`demo/`](demo/).
+
+## Podlodka AI — Hacker Sprint 2 report
+
+The write-up of the sprint this project was built during: what was aimed at, what came out,
+and what working with xmemory was like — the problems met and how they felt. It is in
+[`hacker-sprint-2/`](hacker-sprint-2/), together with a per-card log of one xmemory run.

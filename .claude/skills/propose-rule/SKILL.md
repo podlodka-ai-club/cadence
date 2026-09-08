@@ -1,6 +1,6 @@
 ---
 name: propose-rule
-description: Word one instruction to whatever writes posts into a memory of city events, out of what observers complained about — or say that the fault is in the schema and a person must decide. Use when asked to propose or draft a memory rule from observations, or when the user runs /propose-rule. Takes the schema and the complaints as they stand.
+description: Word one instruction to whatever writes posts into a memory of city events, out of what observers complained about — or say that the fault is in the schema and whoever runs the loop must decide. Use when asked to propose or draft a memory rule from observations, or when the user runs /propose-rule. Takes the schema and the complaints as they stand.
 ---
 
 # propose-rule
@@ -69,7 +69,7 @@ every post.
 If the fault cannot be corrected by an instruction — the schema keeps no field for what
 would have to be written, or the sentence that causes it is the schema's own and an
 instruction would only contradict it on every post — then say so instead of wording a
-rule. Name the record, the field and the sentence, and what a person would have to change.
+rule. Name the record, the field and the sentence, and what would have to change there.
 That verdict is the answer; a rule written to paper over it would be judged on cards it
 was never able to fix.
 
@@ -109,6 +109,6 @@ One JSON object in a fenced `json` block, and nothing else in the reply:
 `verdict` is `rule` when an instruction can carry the fix, and `text` is that instruction
 as section 4 asks for it.
 
-`verdict` is `schema` when it cannot, and `text` is then written for the person who will
-decide: what in the schema causes the fault, and what would have to change there. English
+`verdict` is `schema` when it cannot, and `text` is then written for whoever will decide:
+what in the schema causes the fault, and what would have to change there. English
 or Russian, whichever says it plainer.

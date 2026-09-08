@@ -222,3 +222,11 @@ memory loop, [`deploy/`](deploy/) for running the online parser as a service.
 - The filter does not look at a card for a prompt injection.
 - The filter's loop is not closed: wording a rule out of the disagreements is still a
   person's work, and nothing proposes one on its own.
+
+## Demo
+
+A demonstration of the self-learning loop at work: one turn of it, run end to end on a
+database and memories that start empty — the reference set written in, a question memory
+cannot yet answer, the observer, a proposal, a second memory under the change, the gate's
+decision, and the same question answered. What it needs and how to run it is in
+[`demo/`](demo/).

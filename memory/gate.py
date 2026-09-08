@@ -20,8 +20,8 @@ so that it is not proposed again. The numbers go on the rule either way.
 The arithmetic is the same — the two are judged by the same evidence — but they
 are kept apart because they are applied differently: a rule is given to whoever
 writes one post, a schema change is given to a memory once and holds for
-everything written into it afterwards. A schema change is only decided once a
-person has said what to write instead.
+everything written into it afterwards. A schema change is only decided once
+whoever runs the loop has said what to write instead.
 
 Only a draft is decided. Nothing here costs xmemory anything: the marks were
 paid for when they were made.
@@ -89,8 +89,8 @@ def main(argv=None):
             if not args.schema and judged.get("target") != "memory":
                 sys.exit("rule %s is addressed to the filter, and is decided by judge.gate" % args.name)
             if args.schema and not judged.get("change"):
-                sys.exit("schema change %s has no decision on it yet: a person says what to write "
-                         "instead before it can be judged" % args.name)
+                sys.exit("schema change %s has no decision on it yet: memory.approve says what to "
+                         "write instead before it can be judged" % args.name)
             if judged["status"] != "draft":
                 sys.exit("%s %s is %s already, not a draft" % (what, args.name, judged["status"]))
             cards = [(card["source"], card["externalId"]) for card in judged["cards"]]

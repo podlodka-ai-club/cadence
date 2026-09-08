@@ -53,6 +53,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   given, proposed where no rule could have helped, and where it stands.
 - `memory.gate`: decides a schema change as well as a rule.
 - `schema/`: the xmemory schema in force, kept in the repository.
+- `memory.approve`: says what a draft schema change is to write into the schema instead.
 
 ### Changed
 
@@ -64,6 +65,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `storage.setup`: takes the collections to bring up, for a database that holds
   only some of them.
 - `storage`: a rule says who it is addressed to, the filter or memory.
+- `storage`, `memory`, `propose-rule`: a schema change is decided by whoever runs the
+  loop, a session included, rather than by a person only.
 
 ### Fixed
 

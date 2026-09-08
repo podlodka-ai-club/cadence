@@ -87,10 +87,10 @@ rides in a wrapper — a rule is given to whoever writes one post, a schema chan
 to a memory once and holds for everything written into it afterwards — and the two are
 kept in separate collections so that neither can be applied as the other. `finding` is
 what was diagnosed: which sentence of the schema causes the fault and why no instruction
-could correct it. `change` is what a person decided to write instead, and only a person
-writes it: a draft with no `change` is a question still waiting for an answer, and nothing
-is decided before it is answered. Beyond that the two are judged alike, on the same marks
-of the same cards in two memories.
+could correct it. `change` is what whoever runs the loop decided to write instead — a
+person, or a session shown the finding: a draft with no `change` is a question still
+waiting for an answer, and nothing is decided before it is answered. Beyond that the two
+are judged alike, on the same marks of the same cards in two memories.
 
 A source is a name and a place in it: `startAt`, the moment to read from before anything
 has been read, and `lastMessageId`, the last post already stored. The cursor moves only

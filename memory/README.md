@@ -86,7 +86,19 @@ The skill answers with one of two things, and they go to different collections b
 they are applied in different ways. A **rule** rides in the wrapper of every post and is
 written to `rules`. A **finding** that no instruction could have helped — the fault being
 in the schema memory was given — is written to `schema_changes` as a draft, and waits
-there for a person to say what to write instead.
+there for whoever runs the loop to say what to write instead.
+
+**Say what to write into the schema instead.**
+
+```
+python -m memory.approve NAME FILE
+```
+
+The finding names the sentence at fault; the file holds the sentence that replaces it,
+worded for the schema the next memory is created with. It goes on the draft as `change`.
+Writing it is the decision — a person's, or a session's that was shown the finding — and
+the draft stays a draft until a memory has been written under the changed schema and the
+gate has judged it.
 
 **Decide the rule.**
 
@@ -101,10 +113,11 @@ broke none, and the numbers go on it either way.
 
 `--schema` decides a draft from `schema_changes` instead — the same arithmetic on the same
 kind of evidence, written to the other collection. There the two memories differ by the
-schema they were created with rather than by anything in the wrapper, and only a change a
-person has already worded can be judged.
+schema they were created with rather than by anything in the wrapper, and only a change
+already worded through `memory.approve` can be judged.
 
-Neither `propose` nor `gate` asks memory anything — they read marks already paid for.
+Neither `propose`, `approve` nor `gate` asks memory anything — they read marks already
+paid for.
 
 ## One turn of the loop
 
@@ -133,4 +146,5 @@ rule's cards rather than the whole set is what makes the second half affordable.
 | `ask.py` | puts one question to an instance and prints the answer |
 | `observe.py` | a session per card, and the marks it returns |
 | `propose.py` | the commonest complaint, worded as a draft rule |
+| `approve.py` | the change a draft schema change is to make, said |
 | `gate.py` | decides the rule by the marks of two memories |

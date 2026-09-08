@@ -6,9 +6,9 @@ proposed from the same evidence and judged by the same numbers, and they are
 kept apart so that neither is ever applied as the other.
 
 `finding` is what was diagnosed — which sentence of the schema causes the fault,
-and why no instruction could correct it. `change` is what a person decided to
-write instead, and only a person writes it: a draft with no `change` is a
-question still waiting for an answer.
+and why no instruction could correct it. `change` is what whoever runs the
+loop decided to write instead — a person, or a session shown the finding: a
+draft with no `change` is a question still waiting for an answer.
 """
 from datetime import datetime, timezone
 
@@ -39,9 +39,9 @@ def add(db, name, instance, finding, cards=(), object_name=None, field=None, pro
 
 
 def approve(db, name, change):
-    """Say what to write instead. This is the person's word, and nothing is
-    decided before it: the gate has nothing to judge until a memory has been
-    written under it."""
+    """Say what to write instead. This is the decision of whoever runs the
+    loop, and nothing is decided before it: the gate has nothing to judge until
+    a memory has been written under it."""
     result = db.schema_changes.update_one(
         {"name": name},
         {"$set": {"change": change, "approvedAt": datetime.now(timezone.utc)}})

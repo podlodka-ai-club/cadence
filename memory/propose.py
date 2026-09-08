@@ -27,7 +27,7 @@ can ask of it. It answers with one of two things, and they are kept in different
 collections because they are applied in different ways: a rule, which rides in
 the wrapper of every post and goes to `rules`; or a finding that no instruction
 could help and the schema itself is at fault, which goes to `schema_changes` as
-a draft and waits for a person to say what to write instead.
+a draft and waits for `memory.approve` to say what to write instead.
 
 The wording is the `propose-rule` skill's work, in a session of its own; this
 module chooses the complaint, hands them over and keeps what comes back. Like
@@ -210,7 +210,7 @@ def main(argv=None):
             if not text:
                 sys.exit("nothing came back to make a rule of")
             if verdict == "schema":
-                print("\nno rule: the fault is in the schema, and a person decides what to do\n")
+                print("\nno rule: the fault is in the schema, and whoever runs the loop decides what to do\n")
                 print(text)
                 print("\ncards: %s" % ", ".join("%s/%s" % key for key in cards + controls))
                 if args.dry_run:
@@ -218,8 +218,8 @@ def main(argv=None):
                     return
                 schema_changes.add(db, args.name, args.instance, text, cards=cards + controls,
                                    proposed_from=drawn_from)
-                print("\nwritten as a draft in schema_changes — it waits for a person to say what")
-                print("to write instead, and is judged once a memory has been written under it")
+                print("\nwritten as a draft in schema_changes — memory.approve says what to write")
+                print("instead, and it is judged once a memory has been written under it")
                 return
             if verdict != "rule":
                 sys.exit("the skill answered neither rule nor schema, but %r" % verdict)

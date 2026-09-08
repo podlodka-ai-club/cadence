@@ -56,6 +56,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `storage.load_set`, `storage.load_answers`: a named set of cards, and the answers about
   cards, from a file.
 - `memory.approve`: says what a draft schema change is to write into the schema instead.
+- `demo/` and the `demo` skill: one turn of the memory loop, run end to end on a database
+  and memories that start empty.
 
 ### Changed
 

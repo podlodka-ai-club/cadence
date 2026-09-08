@@ -1,0 +1,371 @@
+{
+  "name": "eval-1",
+  "note": "The 69 cards the first two xmemory runs were made of, minus the 19 that produced no defect in either run and none under the filter. Ordered as they were sent, so a run over it repeats those conditions.",
+  "cards": [
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29551",
+      "why": [
+        "schedule-collapsed"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45027",
+      "why": [
+        "control"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29570",
+      "why": [
+        "city-in-address",
+        "place-in-two-parts"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29571",
+      "why": [
+        "control"
+      ]
+    },
+    {
+      "source": "t.me/piterach",
+      "externalId": "20344",
+      "why": [
+        "name-is-address",
+        "place-unlinked"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29572",
+      "why": [
+        "schedule-collapsed"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45041",
+      "why": [
+        "control"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45042",
+      "why": [
+        "name-is-address"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29588",
+      "why": [
+        "anchor"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29593",
+      "why": [
+        "control"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29594",
+      "why": [
+        "control"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45053",
+      "why": [
+        "place-in-two-parts"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29598",
+      "why": [
+        "place-duplicate"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45057",
+      "why": [
+        "place-duplicate"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29604",
+      "why": [
+        "no-schedule"
+      ]
+    },
+    {
+      "source": "t.me/piterach",
+      "externalId": "20365",
+      "why": [
+        "anchor"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29609",
+      "why": [
+        "anchor"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29612",
+      "why": [
+        "schedule-collapsed"
+      ]
+    },
+    {
+      "source": "t.me/piterach",
+      "externalId": "20371",
+      "why": [
+        "description-lost",
+        "event-duplicate",
+        "place-duplicate",
+        "schedule-duplicate"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45064",
+      "why": [
+        "schedule-collapsed"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29619",
+      "why": [
+        "filter-wrong"
+      ]
+    },
+    {
+      "source": "t.me/piterach",
+      "externalId": "20380",
+      "why": [
+        "description-lost",
+        "event-duplicate",
+        "place-duplicate",
+        "schedule-duplicate"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29627",
+      "why": [
+        "name-is-address"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29633",
+      "why": [
+        "no-schedule"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29638",
+      "why": [
+        "control"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29640",
+      "why": [
+        "end-at-lost"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29647",
+      "why": [
+        "schedule-collapsed"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45090",
+      "why": [
+        "no-schedule",
+        "place-duplicate"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45091",
+      "why": [
+        "name-is-address"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45092",
+      "why": [
+        "control"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29654",
+      "why": [
+        "control"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45093",
+      "why": [
+        "place-duplicate"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29658",
+      "why": [
+        "name-is-address"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45095",
+      "why": [
+        "no-schedule"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29664",
+      "why": [
+        "place-duplicate"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45097",
+      "why": [
+        "city-in-address",
+        "no-schedule"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29665",
+      "why": [
+        "control"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45108",
+      "why": [
+        "name-is-address"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29671",
+      "why": [
+        "description-lost",
+        "event-duplicate",
+        "schedule-duplicate"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45112",
+      "why": [
+        "no-schedule",
+        "place-in-two-parts"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45113",
+      "why": [
+        "control"
+      ]
+    },
+    {
+      "source": "t.me/kudagospb",
+      "externalId": "45115",
+      "why": [
+        "name-is-address"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29676",
+      "why": [
+        "place-duplicate"
+      ]
+    },
+    {
+      "source": "t.me/piterach",
+      "externalId": "20445",
+      "why": [
+        "place-unlinked"
+      ]
+    },
+    {
+      "source": "t.me/meropriyatiye",
+      "externalId": "29681",
+      "why": [
+        "filter-wrong",
+        "no-schedule"
+      ]
+    },
+    {
+      "source": "t.me/sankt_peterburg_afisha",
+      "externalId": "6883",
+      "why": [
+        "filter-wrong"
+      ]
+    },
+    {
+      "source": "t.me/sankt_peterburg_afisha",
+      "externalId": "6885",
+      "why": [
+        "filter-wrong"
+      ]
+    },
+    {
+      "source": "t.me/sankt_peterburg_afisha",
+      "externalId": "6889",
+      "why": [
+        "filter-wrong",
+        "place-duplicate"
+      ]
+    },
+    {
+      "source": "t.me/sankt_peterburg_afisha",
+      "externalId": "6896",
+      "why": [
+        "doors-time"
+      ]
+    },
+    {
+      "source": "t.me/sankt_peterburg_afisha",
+      "externalId": "6902",
+      "why": [
+        "filter-wrong"
+      ]
+    }
+  ]
+}

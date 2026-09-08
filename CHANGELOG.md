@@ -53,6 +53,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   given, proposed where no rule could have helped, and where it stands.
 - `memory.gate`: decides a schema change as well as a rule.
 - `schema/`: the xmemory schema in force, kept in the repository.
+- `storage.load_set`, `storage.load_answers`: a named set of cards, and the answers about
+  cards, from a file.
 - `memory.approve`: says what a draft schema change is to write into the schema instead.
 
 ### Changed

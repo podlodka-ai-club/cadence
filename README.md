@@ -222,4 +222,3 @@ memory loop, [`deploy/`](deploy/) for running the online parser as a service.
 - The filter does not look at a card for a prompt injection.
 - The filter's loop is not closed: wording a rule out of the disagreements is still a
   person's work, and nothing proposes one on its own.
-- A named set of cards can only be made from code; there is no command for it.

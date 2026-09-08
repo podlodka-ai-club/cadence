@@ -136,6 +136,27 @@ python -m storage.load_cards [PATH ...] [--db NAME] [--dry-run]
 twice leaves one copy of each: a card is upserted by `(source, externalId)`, its post
 refreshed and everything else left alone, so an answer already given survives it.
 
+Record the answers about cards, from a file:
+
+```
+python -m storage.load_answers FILE [--db NAME] [--dry-run]
+```
+
+A list of `{"source", "externalId", "accept", "reasons"}`; there is one answer per card,
+so an answer already given is replaced by the one in the file. A reason not on the list
+above, or an answer about a card the database does not hold, is refused before anything is
+written.
+
+Write a named set of cards, from a file:
+
+```
+python -m storage.load_set FILE [--db NAME] [--dry-run]
+```
+
+`{"name", "note", "cards": [{"source", "externalId", "why"}, …]}`, the cards in the order
+the set is to hold them. A set is written once and never edited, so a name already taken
+is refused, as is a set naming a card the database does not hold.
+
 Print one card, for whoever has a record and needs the post behind it:
 
 ```
@@ -162,5 +183,7 @@ already there and changes nothing.
 | `setup.py` | creates the collections and brings them to the current schema |
 | `load_cards.py` | reads card files and puts them in `cards` |
 | `add_source.py` | adds a source to read |
+| `load_answers.py` | records the answers about cards from a file |
+| `load_set.py` | writes a named set of cards from a file |
 | `show_card.py` | prints one card, by the source and number that address it |
 | `cards.py`, `answers.py`, `verdicts.py`, `rules.py`, `runs.py`, `sets.py`, `observations.py`, `schema_changes.py`, `sources.py` | reading and writing each collection |
